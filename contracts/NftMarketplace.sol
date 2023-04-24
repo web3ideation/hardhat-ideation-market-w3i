@@ -244,3 +244,5 @@ contract NftMarketplace is ReentrancyGuard {
 // !!! set it up that I get 0.1% of all proceeds of every sucessfull(!) sale
 
 // !!! how can i see emited events on hardhat local host?
+
+// !!! Partner would like a function that you can swap nfts directly, so you offer yournfts against another specific nft, or multiple?
