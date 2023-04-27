@@ -207,17 +207,17 @@ const { developmentChains } = require("../../helper-hardhat-config")
 
       describe("cancelListing", () => {
         it("reverts if not listed", async function () {
-          await expect(nftMarketplace.cancelListing(basicNft.address, TOKEN_ID)).to.be.revertedWith(
-            "NftMarketplace__NotListed"
-          )
+          await expect(
+            nftMarketplace.cancelListing(basicNft.address, TOKEN_ID)
+          ).to.be.revertedWith("NftMarketplace__NotListed")
         })
 
         it("reverts if not Owner", async function () {
           await nftMarketplace.listItem(basicNft.address, TOKEN_ID, PRICE)
           nftMarketplace = nftMarketplaceContract.connect(user)
-          await expect(nftMarketplace.cancelListing(basicNft.address, TOKEN_ID)).to.be.revertedWith(
-            "NftMarketplace__NotOwner"
-          )
+          await expect(
+            nftMarketplace.cancelListing(basicNft.address, TOKEN_ID)
+          ).to.be.revertedWith("NftMarketplace__NotOwner")
         })
 
         it("deletes the s_listing mapping", async function () {
