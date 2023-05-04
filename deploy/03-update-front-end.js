@@ -15,17 +15,14 @@ module.exports = async () => {
 }
 
 async function updateAbi() {
-  await deployments.fixture(["main"])
-
-  const nftMarketplaceInfo = await deployments.get("NftMarketplace")
-  const nftMarketplace = await ethers.getContractAt("NftMarketplace", nftMarketplaceInfo.address)
+  const nftMarketplace = await ethers.getContract("NftMarketplace")
 
   fs.writeFileSync(
     `${frontEndAbiLocation}NftMarketplace.json`,
     nftMarketplace.interface.format(ethers.utils.FormatTypes.json)
   )
-  const basicNftInfo = await deployments.get("BasicNft")
-  const basicNft = await ethers.getContractAt("BasicNft", nftMarketplaceInfo.address)
+  const basicNft = await ethers.getContract("BasicNft")
+
   fs.writeFileSync(
     `${frontEndAbiLocation}BasicNft.json`,
     basicNft.interface.format(ethers.utils.FormatTypes.json)
@@ -33,11 +30,9 @@ async function updateAbi() {
 }
 
 async function updateContractAddresses() {
-  await deployments.fixture(["main"])
-
   const chainId = network.config.chainId.toString()
-  const nftMarketplaceInfo = await deployments.get("NftMarketplace")
-  const nftMarketplace = await ethers.getContractAt("NftMarketplace", nftMarketplaceInfo.address)
+  const nftMarketplace = await ethers.getContract("NftMarketplace")
+
   const contractAddresses = JSON.parse(fs.readFileSync(frontEndContractsFile, "utf8"))
   if (chainId in contractAddresses) {
     if (!contractAddresses[chainId]["NftMarketplace"].includes(nftMarketplace.address)) {
