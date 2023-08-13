@@ -2,8 +2,8 @@ const fs = require("fs")
 const { network } = require("hardhat")
 require("hardhat-deploy")
 
-const frontEndContractsFile = "../nextjs-nft-marketplace-fcc/constants/networkMapping.json"
-const frontEndAbiLocation = "../nextjs-nft-marketplace-fcc/constants/"
+const frontEndContractsFile = "../nextjs-nft-marketplace-w3i/constants/networkMapping.json"
+const frontEndAbiLocation = "../nextjs-nft-marketplace-w3i/constants/"
 
 module.exports = async () => {
   if (process.env.UPDATE_FRONT_END) {

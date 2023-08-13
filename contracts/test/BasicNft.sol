@@ -19,7 +19,7 @@ contract BasicNft is ERC721 {
         _safeMint(msg.sender, s_tokenCounter);
         emit NftMinted(s_tokenCounter);
         s_tokenCounter++;
-        return s_tokenCounter - 1; //!!! i think the returned tokenCounter is not the one that the nft has been minted as. i think it is one higher... patrick doesnt return at all..
+        return s_tokenCounter - 1; //!!!W i think the returned tokenCounter is not the one that the nft has been minted as. i think it is one higher... patrick doesnt return at all..
     }
 
     function tokenURI(uint256 /* tokenId */) public view override returns (string memory) {

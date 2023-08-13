@@ -5,6 +5,8 @@ Create a decentralized NFT Marketplace:
 4. `updateListing`: to update the price
 5. `withdrawproceeds`: Withdraw payment for my bought NFTs (when sbd buys the nft they will pay the price to the smartcontract of the nft marketplace. When the seller calls this function the smartcontract will send that money to their own wallet) -- But why dont we set up the smart contract to directly pay it out?? 
 
+!!!W make this upgradable using the upgrades plugin from openzeppelin (29:34:50)
+problem with upgradable: I think I will have to use a second contract for governance where I would have only me being able to reroute the calls to the actual marketplace smartcontract. Where I could deploy a new updated version and then use my centraliced power to reroute the calls to that one. but that makes it centralized and also not able to change this centralization. or does it? I think I remember that there was this routing contract, the actual function contract AND a governance contract, so maybe I can programm it in a way that I can eventually change it to decentralized
 
 
 
@@ -162,3 +164,49 @@ ETH/Polygon/Avalanche/etc Address: 0x9680201d9c93d65a3603d2088d125e955c73BD65
 [![Patrick Collins Linkedin](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/patrickalphac/)
 [![Patrick Collins Medium](https://img.shields.io/badge/Medium-000000?style=for-the-badge&logo=medium&logoColor=white)](https://medium.com/@patrick.collins_58673/)
 
+!!!W there are newer NFT ERCs which this marketplace does not support. I think if we want to have an utility marketplace we should support ALL NFT ERCs. Here is the info that cGPT4 gave me:
+
+Ethereum Improvement Proposals (EIPs) describe standards for the Ethereum platform, including core protocol specifications, client APIs, and contract standards. The ERC (Ethereum Request for Comments) section of EIPs specifically deals with application-level standards and conventions.
+
+Here are some of the notable ERCs related to NFTs (Non-Fungible Tokens) and their brief descriptions:
+
+ERC-721 (Non-Fungible Token Standard): Introduced by William Entriken, Dieter Shirley, Jacob Evans, and Nastassia Sachs, this is the most well-known standard for representing individual tokens that are distinct from each other, making them suitable for representing ownership of unique items.
+
+ERC-1155 (Multi Token Standard): Proposed by Witek Radomski, Andrew Cooke, Philippe Castonguay, James Therien, Eric Binet, and Ronan Sandford, this standard allows a single contract to produce both fungible and non-fungible tokens. It's especially useful for games and apps that require multiple token types.
+
+ERC-2981 (NFT Royalty Standard): Proposed by Zach Burks and James Morgan, this standard outlines a way for NFTs to have royalties automatically paid out to creators when their NFTs are sold on secondary markets.
+
+ERC-5007 (Rental NFT, NFT User Extension): Proposed by Anders, Lance, and Shrug, this standard extends the ERC-721 to allow for the rental of NFTs.
+
+ERC-5570 (Digital Receipt Non-Fungible Tokens): Proposed by Sean Darcy, this standard represents a digital receipt as an NFT.
+
+ERC-5606 (Multiverse NFTs): Proposed by Gaurang Torvekar, Khemraj Adhawade, and Nikhil Asrani, this standard introduces the concept of multiverse NFTs, which can exist across multiple virtual worlds or platforms.
+
+ERC-5646 (Token State Fingerprint): Proposed by Naim Ashhab, this standard provides a way to fingerprint the state of an NFT.
+
+ERC-6672 (Multi-redeemable NFTs): Proposed by RE:DREAMER Lab, Archie Chang, Kai Yu, Yonathan Randyanto, Boyu Chu, Boxi Li, and Jason Cheng, this standard allows for NFTs that can be redeemed multiple times.
+
+ERC-6809 (Non-Fungible Key Bound Token): Proposed by Mihai Onila, Nick Zeman, and Narcis Cotaie, this standard ties non-fungible tokens to specific keys.
+
+ERC-7053 (Interoperable Digital Media Indexing): Proposed by Bofu Chen and Tammy Yang, this standard focuses on indexing digital media in an interoperable manner.
+
+These are just a few of the many ERCs related to NFTs. Each ERC serves a specific purpose and addresses different use cases within the Ethereum ecosystem. If you'd like more detailed information on any specific ERC or another list, please let me know!
+
+
+
+
+User
+when i create a nft marketplace based on the ERC721, will all types of nfts which are based on those ERCs be able to be bought and sold from it?
+ChatGPT
+If you create an NFT marketplace based on the ERC-721 standard, it will primarily support the buying and selling of NFTs that conform to the ERC-721 standard. However, NFTs based on other ERC standards may not be directly compatible with your marketplace unless you specifically design and implement support for those standards. Here's a breakdown:
+
+ERC-721: Your marketplace will natively support NFTs based on this standard since it's designed around it. ERC-721 tokens represent unique assets and have a distinct set of functions to transfer, approve, and query ownership.
+
+ERC-1155: This is a multi-token standard that can represent both fungible (like ERC-20) and non-fungible tokens (like ERC-721) within a single contract. If you want your marketplace to support ERC-1155 tokens, you'll need to implement additional logic to handle the specific functions and behaviors of this standard.
+
+Other NFT-related ERCs: Many of the other ERCs related to NFTs (like ERC-2981 for royalties, ERC-5007 for rentals, etc.) are extensions or modifications of the base ERC-721 standard. Depending on the specific ERC, you might need to implement additional features or logic to support them. For example, if you want to support ERC-2981 royalties, you'd need to ensure that a portion of secondary sales goes to the original creator.
+
+In summary, while an ERC-721 based marketplace will natively support ERC-721 NFTs, supporting other types of NFTs or additional features requires extra development and integration. If you're planning to create a versatile marketplace, it's essential to consider the range of standards and features you want to support from the outset.
+
+
+!!! add licence file in github

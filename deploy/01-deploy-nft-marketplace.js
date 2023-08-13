@@ -3,29 +3,29 @@ const { developmentChains } = require("../helper-hardhat-config")
 const { verify } = require("../utils/verify")
 
 module.exports = async ({ getNamedAccounts, deployments }) => {
-    const { deploy, log } = deployments
-    const { deployer } = await getNamedAccounts()
+  const { deploy, log } = deployments
+  const { deployer } = await getNamedAccounts()
 
-    log("----------------------------------------------------")
-    const arguments = []
-    const nftMarketplace = await deploy("NftMarketplace", {
-        from: deployer,
-        args: arguments,
-        log: true,
-        waitConfirmations: network.config.blockConfirmations || 1,
-    })
+  log("----------------------------------------------------")
+  const arguments = []
+  const nftMarketplace = await deploy("NftMarketplace", {
+    from: deployer,
+    args: arguments,
+    log: true,
+    waitConfirmations: network.config.blockConfirmations || 1,
+  })
 
-    // Verify the deployment
-    if (!developmentChains.includes(network.name) && process.env.ETHERSCAN_API_KEY) {
-        log("Verifying...")
-        await verify(nftMarketplace.address, arguments)
-    }
-    log("----------------------------------------------------")
+  // Verify the deployment
+  if (!developmentChains.includes(network.name) && process.env.ETHERSCAN_API_KEY) {
+    log("Verifying...")
+    await verify(nftMarketplace.address, arguments)
+  }
+  log("----------------------------------------------------")
 }
 
 module.exports.tags = ["all", "nftMarketplace", "main"]
 
-// !!! test if i can use the hh console to get the NextListingId:
+// !!!W test if i can use the hh console to get the NextListingId:
 
 // cGPT
 // Based on the error message you received, it seems like you have not defined the nftMarketplace variable in the console. To interact with your smart contract in the console, you first need to create an instance of the contract using its ABI and address. Here's how you can do it:

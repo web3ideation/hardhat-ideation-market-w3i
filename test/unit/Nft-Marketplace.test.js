@@ -1,5 +1,5 @@
-// !!! i didnt do staging tests - think which ones would make sense or if i can just run this test also on the testnet.
-// !!! try running this test on the forked hh network
+// !!!W i didnt do staging tests - think which ones would make sense or if i can just run this test also on the testnet.
+// !!!W try running this test on the forked hh network
 const { assert, expect } = require("chai")
 const { network, deployments, ethers } = require("hardhat")
 const { developmentChains } = require("../../helper-hardhat-config")
