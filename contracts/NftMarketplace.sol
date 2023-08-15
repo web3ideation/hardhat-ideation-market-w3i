@@ -192,6 +192,7 @@ contract NftMarketplace is ReentrancyGuard {
                     msg.sender,
                 "You don't own the desired NFT for swap"
             );
+            checkApproval(listedItem.desiredNftAddress, listedItem.desiredTokenId); // !!!W this is a quick fix. cGPT said there was an issue about the approval.
 
             // Swap the NFTs
             IERC721(nftAddress).safeTransferFrom(listedItem.seller, msg.sender, tokenId);
