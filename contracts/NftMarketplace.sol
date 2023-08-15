@@ -19,14 +19,20 @@ contract NftMarketplace is ReentrancyGuard {
         uint256 listingId; // *** I want that every Listing has a uinque Lising Number, just like in the real world :) then it would make sense to just always let the functions also work if only the listingId is given in the args
         uint256 price;
         address seller;
-    }
+        bool isForSwap; // Indicates if the NFT is listed for swap instead of for sale
+        address desiredNftAddress; // Desired NFTs for swap !!!W find a way to have multiple desiredNftAddresses ( and / or ) - maybe by using an array here(?)
+        uint256 desiredTokenId; // Desired token IDs for swap !!!W find a way to have multiple desiredNftAddresses ( and / or ) - maybe by using an array here(?)
+    } // !!!W also find a way to have the seller list their nft for swap WITH additional ETH. so that they can say i want my 1ETH worth NFT to be swapped against this specific NFT AND 0.3 ETH.
 
     event ItemListed(
         address indexed seller,
         address indexed nftAddress,
         uint256 indexed tokenId,
         uint256 price,
-        uint256 listingId
+        uint256 listingId,
+        bool isForSwap,
+        address desiredNftAddress,
+        uint256 desiredTokenId
     );
 
     event ItemBought(
@@ -34,7 +40,10 @@ contract NftMarketplace is ReentrancyGuard {
         address indexed nftAddress,
         uint256 indexed tokenId,
         uint256 price,
-        uint256 listingId
+        uint256 listingId,
+        bool isForSwap,
+        address desiredNftAddress,
+        uint256 desiredTokenId
     );
 
     event ItemCanceled(
@@ -58,6 +67,7 @@ contract NftMarketplace is ReentrancyGuard {
     mapping(address => uint256) private s_proceeds;
 
     IERC721 nft; // !!!W test if its a problem to have this declared here and not in every function extra, if multiple users use the contracts functions at the same time. I think i actually could just declare this in each function again and again and work with the input arguments and returns to let the data flow
+    // !!!W cGPT mentioned: Declaring nft at the contract level can lead to potential issues if multiple functions are called concurrently. It's safer to declare it within each function where it's needed.
     uint256 listingId = 0; // !!!W add that all the info of the s_listings mapping can be returned when calling a getter function with the listingId as the parameter/argument
     // !!!W does listingId need to be s_listingId?
     // !!!W wouldn a uint256 limit me in how many NFTs can be offered on my marketplace? Which datatype should I use to make sure this nft marketplace can be run for 1000 Years, looking at how many nfts open Sea has registered since the NFT Boom and calculating that value up to 1000 Years?
@@ -66,7 +76,8 @@ contract NftMarketplace is ReentrancyGuard {
     // Modifiers //
     ///////////////
 
-    //nonReentrant Modifier is inherited
+    // nonReentrant Modifier is inherited
+    // !!!W cGPT mentioned: Your modifiers are well-structured. For gas efficiency, it's often better to use require statements instead of multiple modifiers, but for clarity and reusability, modifiers are great.
 
     modifier notListed(address nftAddress, uint256 tokenId) {
         Listing memory listing = s_listings[nftAddress][tokenId];
@@ -77,6 +88,7 @@ contract NftMarketplace is ReentrancyGuard {
         }
         _;
     }
+    // !!!W cGPT mentioned: Checking for the existence of a listing based on its price might not be the most intuitive. It's better to have an explicit bool field, say isListed, in the Listing struct.
 
     modifier isListed(address nftAddress, uint256 tokenId) {
         Listing memory listing = s_listings[nftAddress][tokenId];
@@ -115,7 +127,10 @@ contract NftMarketplace is ReentrancyGuard {
     function listItem(
         address nftAddress,
         uint256 tokenId,
-        uint256 price
+        uint256 price,
+        bool isForSwap,
+        address desiredNftAddress,
+        uint256 desiredTokenId
     )
         external
         // Challenge: Have this contract accept payment in a subset of tokens as well
@@ -124,7 +139,8 @@ contract NftMarketplace is ReentrancyGuard {
         notListed(nftAddress, tokenId)
         isOwner(nftAddress, tokenId, msg.sender)
     {
-        if (price <= 0) {
+        if (!isForSwap && price <= 0) {
+            // !!!W this is a quick fix for what cGPT mentioned. Check if thats a good solution or if i should enhance. -  It seems that the listItem function checks for the price to be above zero, even for swap listings. This restriction should probably be removed or modified in the contract for swap listings since the price is not necessarily relevant in such cases.
             revert NftMarketplace__PriceMustBeAboveZero();
         }
 
@@ -132,8 +148,24 @@ contract NftMarketplace is ReentrancyGuard {
 
         // info: approve the NFT Marketplace to transfer the NFT (that way the Owner is keeping the NFT in their wallet until someone bougt it from the marketplace)
         checkApproval(nftAddress, tokenId);
-        s_listings[nftAddress][tokenId] = Listing(listingId, price, msg.sender);
-        emit ItemListed(msg.sender, nftAddress, tokenId, price, listingId);
+        s_listings[nftAddress][tokenId] = Listing(
+            listingId,
+            price,
+            msg.sender,
+            isForSwap,
+            desiredNftAddress,
+            desiredTokenId
+        );
+        emit ItemListed(
+            msg.sender,
+            nftAddress,
+            tokenId,
+            price,
+            listingId,
+            isForSwap,
+            desiredNftAddress,
+            desiredTokenId
+        );
         listingId++;
         // !!!W is there a way to listen to the BasicNft event for if the approval has been revoked, to then cancel the listing automatically?
     }
@@ -147,19 +179,47 @@ contract NftMarketplace is ReentrancyGuard {
     }
 
     function buyItem(
-        address nftAddress,
+        address nftAddress, // !!!W should i rather work with the listingId of the struct? that seems more streamlined...
         uint256 tokenId
     ) external payable nonReentrant isListed(nftAddress, tokenId) {
-        // if two users call the function concurrently the second user will be blocked. what happens then? is there a way to not even have the user notice that and just try again?
+        // !!!W if two users call the function concurrently the second user will be blocked. what happens then? is there a way to not even have the user notice that and just try again?
         checkApproval(nftAddress, tokenId); // !!!W add a test that confirms that the buyItem function fails if the approval has been revoked in the meantime!
         Listing memory listedItem = s_listings[nftAddress][tokenId];
-        if (msg.value < listedItem.price) {
-            revert NftMarketplace__PriceNotMet(nftAddress, tokenId, listedItem.price); // !!!W I think it would be good to add msg.value as well so its visible how much eth has actually been tried to transfer, since i guess there are gas costs and stuff...
+
+        if (listedItem.isForSwap) {
+            require( // should i have this as a modifier just like the owner of one i use for the sellItem?
+                IERC721(listedItem.desiredNftAddress).ownerOf(listedItem.desiredTokenId) ==
+                    msg.sender,
+                "You don't own the desired NFT for swap"
+            );
+
+            // Swap the NFTs
+            IERC721(nftAddress).safeTransferFrom(listedItem.seller, msg.sender, tokenId);
+            IERC721(listedItem.desiredNftAddress).safeTransferFrom(
+                msg.sender,
+                listedItem.seller,
+                listedItem.desiredTokenId
+            );
+            // !!!W when implementing the swap + eth option, i need to have the s_proceeds here aswell.
+        } else {
+            // maybe its safer to not use else but start a new if with `if (!listedItem.isForSwap) {`
+            if (msg.value < listedItem.price) {
+                revert NftMarketplace__PriceNotMet(nftAddress, tokenId, listedItem.price); // !!!W I think it would be good to add msg.value as well so its visible how much eth has actually been tried to transfer, since i guess there are gas costs and stuff...
+            } // !!!W i could also do this with `require(msg.value == listedItem.price, "Incorrect Ether sent");` - is this better? like safer and or gas efficient?
+            s_proceeds[listedItem.seller] += msg.value;
+            IERC721(nftAddress).safeTransferFrom(listedItem.seller, msg.sender, tokenId); // !!!W this needs an revert catch thingy bc if it fails to transfer the nft, for example because the approval has been revoked, the whole function has to be reverted.
         }
-        s_proceeds[listedItem.seller] += msg.value;
         delete (s_listings[nftAddress][tokenId]); // !!!W I want the data to be available even after the nft has been sold. in a decentral way where it doesnt cost gas to be stored for a longer time. maybe in the events? maybe in an array of this smart contract?
-        IERC721(nftAddress).safeTransferFrom(listedItem.seller, msg.sender, tokenId); // !!!W this needs an revert catch thingy bc if it fails to transfer the nft, for example because the approval has been revoked, the whole function has to be reverted.
-        emit ItemBought(msg.sender, nftAddress, tokenId, listedItem.price, listedItem.listingId); // !!!W Patrick said that the event emitted is technically not save from reantrancy attacks. figure out how and why and make it safe.
+        emit ItemBought(
+            msg.sender,
+            nftAddress,
+            tokenId,
+            listedItem.price,
+            listedItem.listingId,
+            listedItem.isForSwap,
+            listedItem.desiredNftAddress,
+            listedItem.desiredTokenId
+        ); // !!!W Patrick said that the event emitted is technically not save from reantrancy attacks. figure out how and why and make it safe.
     }
 
     function cancelListing(
@@ -178,6 +238,7 @@ contract NftMarketplace is ReentrancyGuard {
     }
 
     function updateListing(
+        // !!!W this needs to get adjusted for swapping nfts.
         // take notice: when the listing gets updated the ListingId also gets updated!
         address nftAddress,
         uint256 tokenId,
@@ -246,3 +307,5 @@ contract NftMarketplace is ReentrancyGuard {
 // !!!W how can i see emited events on hardhat local host?
 
 // !!!W Partner would like a function that you can swap nfts directly, so you offer yournfts against another specific nft, or multiple?
+
+// !!!W cGPT mentioned Security tests for edge cases. Just copy the code into cGPT again and ask it for all possible edge cases and how i can write my test for those.

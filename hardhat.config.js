@@ -41,6 +41,7 @@ module.exports = {
       blockConfirmations: 6,
     },
   },
+  // !!!W add the newest solc version! https://soliditylang.org/
   solidity: {
     compilers: [
       {
