@@ -30,7 +30,13 @@ contract ReentrancyAttack is IERC721Receiver {
 
     function attack() public payable {
         nftMarketplaceInstance = NftMarketplace(s_nftMarketplaceAddress);
-        nftMarketplaceInstance.listItem(s_basicNftAddress, 3, 0.1 ether);
+        nftMarketplaceInstance.listItem(
+            s_basicNftAddress,
+            3,
+            0.1 ether,
+            0x0000000000000000000000000000000000000000,
+            0
+        );
         nftMarketplaceInstance.buyItem{value: 0.1 ether}(s_basicNftAddress, 3);
         nftMarketplaceInstance.withdrawProceeds();
     }

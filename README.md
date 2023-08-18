@@ -210,3 +210,14 @@ In summary, while an ERC-721 based marketplace will natively support ERC-721 NFT
 
 
 !!! add licence file in github
+
+
+
+
+
+
+Frontend interface:
+
+listing an item for Eth: The desiredNftAddress has to be 0x0000000000000000000000000000000000000000 and desiredNftTokenId hast to be 0. If not it will be a listing to swap an NFT. If Null is provided the Smartcontract will revert.
+listing an item for Nft : The Price hast to be 0. If not it will be a Eth listing . If Null is provided the Smartcontract will revert.
+listing an item for Eth AND Nft: desiredNftAddress, desiredNftTokenId AND Price have to have their desired value. 
