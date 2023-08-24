@@ -1,8 +1,9 @@
 const { network, deployments, ethers } = require("hardhat")
+const readlineSync = require("readline-sync")
 
 const PRICE = ethers.utils.parseEther("0.1")
 
-async function mintAndList() {
+async function list() {
   //   let nftMarketplace, nftMarketplaceContract, basicNft, basicNftContract
   //   const PRICE = ethers.utils.parseEther("0.1")
   //   const NEW_PRICE = ethers.utils.parseEther("0.05")
@@ -19,31 +20,41 @@ async function mintAndList() {
   //   nftMarketplace = nftMarketplaceContract.connect(deployer)
   //   const basicNftInfo = await deployments.get("BasicNft")
 
-  const basicNftInfo = await deployments.get("BasicNft")
-  const basicNft = await ethers.getContractAt("BasicNft", basicNftInfo.address)
+  const wowInfo = await deployments.get("WorldOfWomenMock")
+  const wow = await ethers.getContractAt("WorldOfWomenMock", wowInfo.address)
 
   //   basicNft = basicNftContract.connect(deployer)
 
-  console.log("Minting NFT")
-  const mintTx = await basicNft.mintNft()
-  const mintTxRc = await mintTx.wait(1)
-  const tokenId = mintTxRc.events[0].args.tokenId // this is how to get info from a specific event!
-  console.log("tokenId: " + tokenId)
+  //   console.log("Minting NFT")
+  //   const mintTx = await wow.mintNft(1)
+  //   const mintTxRc = await mintTx.wait(1)
+  //   const tokenId = mintTxRc.events[0].args.tokenId // this is how to get info from a specific event!
+  //   console.log("tokenId from events: " + tokenId)
+
+  let tokenId = readlineSync.question("Please enter the Token ID to be listed: ")
+
+  // Rest of your code that uses tokenId goes here
 
   console.log("Approving NFT")
-  const approvalTx = await basicNft.approve(nftMarketplace.address, tokenId)
+  const approvalTx = await wow.approve(nftMarketplace.address, tokenId)
   await approvalTx.wait(1)
 
   console.log("Listing NFT")
-  const listTx = await nftMarketplace.listItem(basicNft.address, tokenId, PRICE) // this needs to be updated with the zero addresses for the desired nft
+  const listTx = await nftMarketplace.listItem(
+    wow.address,
+    tokenId,
+    PRICE,
+    "0x0000000000000000000000000000000000000000",
+    "0x0000000000000000000000000000000000000000"
+  )
   await listTx.wait(1)
 
-  console.log("NFT minted, approved and listed.")
+  console.log(`NFT ${tokenId} minted, approved and listed.`)
 
   //   await nftMarketplace.getListing(basicNftContract.address, TOKEN_ID)
 }
 
-mintAndList()
+list()
   .then(() => process.exit(0))
   .catch((error) => {
     console.error(error)

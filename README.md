@@ -172,6 +172,7 @@ Here are some of the notable ERCs related to NFTs (Non-Fungible Tokens) and thei
 
 ERC-721 (Non-Fungible Token Standard): Introduced by William Entriken, Dieter Shirley, Jacob Evans, and Nastassia Sachs, this is the most well-known standard for representing individual tokens that are distinct from each other, making them suitable for representing ownership of unique items.
 
+ERC-1155 <- this is the one i think stefan mentioned 
 ERC-1155 (Multi Token Standard): Proposed by Witek Radomski, Andrew Cooke, Philippe Castonguay, James Therien, Eric Binet, and Ronan Sandford, this standard allows a single contract to produce both fungible and non-fungible tokens. It's especially useful for games and apps that require multiple token types.
 
 ERC-2981 (NFT Royalty Standard): Proposed by Zach Burks and James Morgan, this standard outlines a way for NFTs to have royalties automatically paid out to creators when their NFTs are sold on secondary markets.
@@ -221,3 +222,9 @@ Frontend interface:
 listing an item for Eth: The desiredNftAddress has to be 0x0000000000000000000000000000000000000000 and desiredNftTokenId hast to be 0. If not it will be a listing to swap an NFT. If Null is provided the Smartcontract will revert.
 listing an item for Nft : The Price hast to be 0. If not it will be a Eth listing . If Null is provided the Smartcontract will revert.
 listing an item for Eth AND Nft: desiredNftAddress, desiredNftTokenId AND Price have to have their desired value. 
+
+
+Doge NFT jpg IPFS link from nft.storage
+ipfs://bafybeiebybpizpuwg7dddeqeeengk2uro6qmzjm5gpcxmnded47jcdpwmu/DogeNFT.jpg
+Doge NFT metadata.json IPFS link from nft.storage
+ipfs://bafybeiebybpizpuwg7dddeqeeengk2uro6qmzjm5gpcxmnded47jcdpwmu/metadata.json

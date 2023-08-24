@@ -126,6 +126,7 @@ contract NftMarketplace is ReentrancyGuard {
      * @dev: Using approve() the user keeps on owning the NFT while it is listed
      */
 
+    // !!!W add a catch for if the user wants to list the same nft as they set as their desiredNftAddress and desiredNftTokenId. that should not be possible.
     function listItem(
         address nftAddress,
         uint256 tokenId,
@@ -198,13 +199,12 @@ contract NftMarketplace is ReentrancyGuard {
                 checkApproval(listedItem.desiredNftAddress, listedItem.desiredNftTokenId); // !!!W this is a quick fix. cGPT said there was an issue about the approval.
 
                 // Swap the NFTs
-                IERC721(nftAddress).safeTransferFrom(listedItem.seller, msg.sender, tokenId);
                 IERC721(listedItem.desiredNftAddress).safeTransferFrom(
                     msg.sender,
                     listedItem.seller,
                     listedItem.desiredNftTokenId
                 );
-                // !!!W when implementing the swap + eth option, i need to have the s_proceeds here aswell.
+                // !!!W when implementing the swap + eth option, i need to have the s_proceeds here aswell. - i think i do already at the top...
             }
             // maybe its safer to not use else but start a new if with `if (!listedItem.isForSwap) {`
 
@@ -250,7 +250,7 @@ contract NftMarketplace is ReentrancyGuard {
         address newDesiredNftAddress,
         uint256 newdesiredNftTokenId
     ) external isListed(nftAddress, tokenId) isOwner(nftAddress, tokenId, msg.sender) {
-        if (newPrice <= 0 || newDesiredNftAddress != address(0)) {
+        if (newPrice <= 0 && newDesiredNftAddress == address(0)) {
             // *** patrick didnt make sure that the updated price would be above 0 in his contract
             revert NftMarketplace__PriceMustBeAboveZeroOrNoDesiredNftGiven();
         }

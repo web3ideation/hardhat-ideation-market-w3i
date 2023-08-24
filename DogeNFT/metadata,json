@@ -1,0 +1,23 @@
+{
+"name":"w3iDoge #1",
+"image":"ipfs://bafybeifshmgvbjk5wz4pnlvubomnjjccctojlvsz72jm6y6zgvja6kmgku/DogeNFT.jpg",
+"attributes":[
+{"value":"this is the best Doge NFT for the ultimate utility experience - no refunds!",
+"trait_type":"description"},
+{"value":"ironic meme",
+"trait_type":"Type"},
+{"value":"web3ideation.com",
+"trait_type":"creator"},
+{"value":"testing a nft marketplace",
+"trait_type":"utility"},
+{"value":"Doge Meme",
+"trait_type":"Background"},
+{"value":"WOW",
+"trait_type":"Text1"},
+{"value":"much tokenize",
+"trait_type":"Text2"},
+{"value":"such Utility",
+"trait_type":"Text3"},
+{"value":"w3i so cool",
+"trait_type":"Text4"}
+]}
