@@ -20,7 +20,7 @@ contract NftMarketplace is ReentrancyGuard {
         uint256 price;
         address seller;
         address desiredNftAddress; // Desired NFTs for swap !!!W find a way to have multiple desiredNftAddresses ( and / or ) - maybe by using an array here(?)
-        uint256 desiredNftTokenId; // Desired token IDs for swap !!!W find a way to have multiple desiredNftAddresses ( and / or ) - maybe by using an array here(?)
+        uint256 desiredTokenId; // Desired token IDs for swap !!!W find a way to have multiple desiredNftAddresses ( and / or ) - maybe by using an array here(?)
     } // !!!W also find a way to have the seller list their nft for swap WITH additional ETH. so that they can say i want my 1ETH worth NFT to be swapped against this specific NFT AND 0.3 ETH.
 
     event ItemListed(
@@ -30,9 +30,9 @@ contract NftMarketplace is ReentrancyGuard {
         uint256 price,
         uint256 listingId,
         address desiredNftAddress,
-        uint256 desiredNftTokenId
+        uint256 desiredTokenId
     );
-
+    // should i add the seller to this event?
     event ItemBought(
         address indexed buyer,
         address indexed nftAddress,
@@ -40,7 +40,7 @@ contract NftMarketplace is ReentrancyGuard {
         uint256 price,
         uint256 listingId,
         address desiredNftAddress,
-        uint256 desiredNftTokenId
+        uint256 desiredTokenId
     );
 
     event ItemCanceled(
@@ -49,7 +49,7 @@ contract NftMarketplace is ReentrancyGuard {
         uint256 indexed tokenId,
         uint256 listingId,
         address desiredNftAddress,
-        uint256 desiredNftTokenId
+        uint256 desiredTokenId
     );
     event ItemUpdated(
         address indexed seller,
@@ -58,7 +58,7 @@ contract NftMarketplace is ReentrancyGuard {
         uint256 price,
         uint256 listingId,
         address desiredNftAddress,
-        uint256 desiredNftTokenId
+        uint256 desiredTokenId
     );
 
     // !!!W the listing mapping could be aswell be defined by listing ID instead of NFT. That would be a more streamlined experience
@@ -126,13 +126,13 @@ contract NftMarketplace is ReentrancyGuard {
      * @dev: Using approve() the user keeps on owning the NFT while it is listed
      */
 
-    // !!!W add a catch for if the user wants to list the same nft as they set as their desiredNftAddress and desiredNftTokenId. that should not be possible.
+    // !!!W add a catch for if the user wants to list the same nft as they set as their desiredNftAddress and desiredTokenId. that should not be possible.
     function listItem(
         address nftAddress,
         uint256 tokenId,
         uint256 price,
         address desiredNftAddress,
-        uint256 desiredNftTokenId
+        uint256 desiredTokenId
     )
         external
         // Challenge: Have this contract accept payment in a subset of tokens as well
@@ -154,7 +154,7 @@ contract NftMarketplace is ReentrancyGuard {
             price,
             msg.sender,
             desiredNftAddress,
-            desiredNftTokenId
+            desiredTokenId
         );
         emit ItemListed(
             msg.sender,
@@ -163,7 +163,7 @@ contract NftMarketplace is ReentrancyGuard {
             price,
             listingId,
             desiredNftAddress,
-            desiredNftTokenId
+            desiredTokenId
         );
 
         // !!!W is there a way to listen to the BasicNft event for if the approval has been revoked, to then cancel the listing automatically?
@@ -192,17 +192,17 @@ contract NftMarketplace is ReentrancyGuard {
             s_proceeds[listedItem.seller] += msg.value;
             if (listedItem.desiredNftAddress != address(0)) {
                 require( // should i have this as a modifier just like the isOwner one i use for the listItem?
-                    IERC721(listedItem.desiredNftAddress).ownerOf(listedItem.desiredNftTokenId) ==
+                    IERC721(listedItem.desiredNftAddress).ownerOf(listedItem.desiredTokenId) ==
                         msg.sender,
                     "You don't own the desired NFT for swap"
                 );
-                checkApproval(listedItem.desiredNftAddress, listedItem.desiredNftTokenId); // !!!W this is a quick fix. cGPT said there was an issue about the approval.
+                checkApproval(listedItem.desiredNftAddress, listedItem.desiredTokenId); // !!!W this is a quick fix. cGPT said there was an issue about the approval.
 
                 // Swap the NFTs
                 IERC721(listedItem.desiredNftAddress).safeTransferFrom(
                     msg.sender,
                     listedItem.seller,
-                    listedItem.desiredNftTokenId
+                    listedItem.desiredTokenId
                 );
                 // !!!W when implementing the swap + eth option, i need to have the s_proceeds here aswell. - i think i do already at the top...
             }
@@ -218,7 +218,7 @@ contract NftMarketplace is ReentrancyGuard {
                 listedItem.price,
                 listedItem.listingId,
                 listedItem.desiredNftAddress,
-                listedItem.desiredNftTokenId
+                listedItem.desiredTokenId
             ); // !!!W Patrick said that the event emitted is technically not save from reantrancy attacks. figure out how and why and make it safe.
         }
     }
@@ -236,7 +236,7 @@ contract NftMarketplace is ReentrancyGuard {
             tokenId,
             listedItem.listingId,
             listedItem.desiredNftAddress,
-            listedItem.desiredNftTokenId
+            listedItem.desiredTokenId
         );
         // nft = IERC721(nftAddress); nft.approve(address(0), tokenId); // !!!W patrick didnt revoke the approval in his contract -> I guess bc its not possible. bc that call can only come from the owner or from the approved for all, while this call here is coming from the contract which is not. But I think it would make sense if the address that is approved would be able to revoke its onw approval, check out why it is not!
     }
@@ -248,7 +248,7 @@ contract NftMarketplace is ReentrancyGuard {
         uint256 tokenId,
         uint256 newPrice,
         address newDesiredNftAddress,
-        uint256 newdesiredNftTokenId
+        uint256 newdesiredTokenId
     ) external isListed(nftAddress, tokenId) isOwner(nftAddress, tokenId, msg.sender) {
         if (newPrice <= 0 && newDesiredNftAddress == address(0)) {
             // *** patrick didnt make sure that the updated price would be above 0 in his contract
@@ -258,7 +258,7 @@ contract NftMarketplace is ReentrancyGuard {
         Listing memory listedItem = s_listings[nftAddress][tokenId];
         listedItem.price = newPrice;
         listedItem.desiredNftAddress = newDesiredNftAddress;
-        listedItem.desiredNftTokenId = newdesiredNftTokenId;
+        listedItem.desiredTokenId = newdesiredTokenId;
         s_listings[nftAddress][tokenId] = listedItem;
         emit ItemUpdated(
             msg.sender,
@@ -267,7 +267,7 @@ contract NftMarketplace is ReentrancyGuard {
             listedItem.price,
             listedItem.listingId, // !!!W check if the listingId stays the same, even if between the listItem creation and the updateListing have been other listings created and deleted
             listedItem.desiredNftAddress,
-            listedItem.desiredNftTokenId
+            listedItem.desiredTokenId
         );
     }
 
