@@ -228,3 +228,11 @@ Doge NFT jpg IPFS link from nft.storage
 ipfs://bafybeiebybpizpuwg7dddeqeeengk2uro6qmzjm5gpcxmnded47jcdpwmu/DogeNFT.jpg
 Doge NFT metadata.json IPFS link from nft.storage
 ipfs://bafybeiebybpizpuwg7dddeqeeengk2uro6qmzjm5gpcxmnded47jcdpwmu/metadata.json
+
+
+
+Notes on the different nft contracts:
+so the basicNft has the .mintNft function, while a erc721 has the .mint function.
+the wow also has the .mint function but also needs a number as a parameter which it uses for the tokenid
+the regularNft had the modifier onlyowner for the mint function, which makes sense if the minting is free.
+also the regularNft starts counting there tokenId at 1.

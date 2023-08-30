@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT
-
-// crate a mock of a actual utility nft like nike steps or sth
+// created with cGPT on ERC721 basis
 
 pragma solidity ^0.8.0;
 
@@ -8,20 +7,19 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract RegularNFT is ERC721Enumerable, Ownable {
+contract RegularNft is ERC721Enumerable, Ownable {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIdCounter;
-    string private _baseTokenURI;
 
-    constructor(
-        string memory name,
-        string memory symbol,
-        string memory baseTokenURI
-    ) ERC721(name, symbol) {
-        _baseTokenURI = baseTokenURI;
-    }
+    // Hardcoded values
+    string private constant _baseTokenURI =
+        "ipfs://bafybeiebybpizpuwg7dddeqeeengk2uro6qmzjm5gpcxmnded47jcdpwmu/metadata.json";
+    string private constant TOKEN_NAME = "w3iDoge #1";
+    string private constant TOKEN_SYMBOL = "WID";
 
-    function _baseURI() internal view override returns (string memory) {
+    constructor() ERC721(TOKEN_NAME, TOKEN_SYMBOL) {}
+
+    function _baseURI() internal pure override returns (string memory) {
         return _baseTokenURI;
     }
 
@@ -29,5 +27,11 @@ contract RegularNFT is ERC721Enumerable, Ownable {
         _tokenIdCounter.increment();
         uint256 newTokenId = _tokenIdCounter.current();
         _safeMint(recipient, newTokenId);
+    }
+
+    // Override tokenURI to always return the hardcoded _baseTokenURI
+    function tokenURI(uint256 tokenId) public view override returns (string memory) {
+        require(_exists(tokenId), "ERC721Metadata: URI query for nonexistent token");
+        return _baseTokenURI;
     }
 }

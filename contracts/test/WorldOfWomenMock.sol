@@ -1,4 +1,4 @@
-// this is just a mock to test the nft marketplace, all rights reserved to
+// this is just a mock to test the nft marketplace, orignial author (worldofwomen.art)
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
@@ -39,12 +39,12 @@ contract WorldOfWomenMock is Ownable, Clubs, ERC721Enumerable {
     bool private _saleStarted;
     string public baseURI;
 
-    address t1 = 0xc9b6321dc216D91E626E9BAA61b06B0E4d55bdb1;
-    address t2 = 0xBD152AcFA5f810Cba903c2eFe7074Be88E335f50;
+    address t1 = 0xE8dF60a93b2B328397a8CBf73f0d732aaa11e33D;
+    address t2 = 0xE8dF60a93b2B328397a8CBf73f0d732aaa11e33D;
 
     constructor() ERC721("World Of Women", "WOW") {
         _saleStarted = true;
-        baseURI = "ipfs://bafybeiebybpizpuwg7dddeqeeengk2uro6qmzjm5gpcxmnded47jcdpwmu/metadata.json";
+        baseURI = "ipfs://QmTNBQDbggLZdKF1fRgWnXsnRikd52zL5ciNu769g9JoUP/";
     }
 
     modifier whenSaleStarted() {

@@ -12,7 +12,9 @@ const { developmentChains } = require("../../helper-hardhat-config")
         basicNft,
         basicNftContract,
         WOWMock,
-        WOWMockContract
+        WOWMockContract,
+        regularNft,
+        regularNftContract
       const ZERO_PRICE = ethers.utils.parseEther("0")
       const PRICE = ethers.utils.parseEther("0.1")
       const NEW_PRICE = ethers.utils.parseEther("0.05")
@@ -1455,215 +1457,305 @@ const { developmentChains } = require("../../helper-hardhat-config")
       })
 
       describe("updateListing for Nft AND Eth", () => {
-        describe("updateListing for Nft", () => {
-          beforeEach(async () => {
-            otherUser = accounts[2]
+        beforeEach(async () => {
+          otherUser = accounts[2]
 
-            const WOWMockInfo = await deployments.get("WorldOfWomenMock")
-            WOWMockContract = await ethers.getContractAt("WorldOfWomenMock", WOWMockInfo.address)
-            WOWMock = WOWMockContract.connect(otherUser)
+          const WOWMockInfo = await deployments.get("WorldOfWomenMock")
+          WOWMockContract = await ethers.getContractAt("WorldOfWomenMock", WOWMockInfo.address)
+          WOWMock = WOWMockContract.connect(otherUser)
 
-            await WOWMock.mint(1, { value: ethers.utils.parseEther("0.000001") })
-            await WOWMock.approve(nftMarketplaceContract.address, TOKEN_ID)
+          await WOWMock.mint(1, { value: ethers.utils.parseEther("0.000001") })
+          await WOWMock.approve(nftMarketplaceContract.address, TOKEN_ID)
 
-            WOWMock = WOWMockContract.connect(deployer)
-            NEW_DESIREDNFTADDRESS = WOWMock.address
-            new_desiredTokenId = "0"
-            DESIREDNFTADDRESS = basicNft.address
-          })
-          it("reverts if not listed", async function () {
-            await expect(
-              nftMarketplace.updateListing(
-                basicNft.address,
-                TOKEN_ID,
-                NEW_PRICE,
-                NEW_DESIREDNFTADDRESS,
-                new_desiredTokenId
-              )
-            ).to.be.revertedWith("NftMarketplace__NotListed")
-          })
-
-          it("reverts if not Owner", async function () {
-            await nftMarketplace.listItem(
-              basicNft.address,
-              TOKEN_ID,
-              PRICE,
-              DESIREDNFTADDRESS,
-              desiredTokenId
-            )
-            nftMarketplace = nftMarketplaceContract.connect(user)
-            await expect(
-              nftMarketplace.updateListing(
-                basicNft.address,
-                TOKEN_ID,
-                NEW_PRICE,
-                NEW_DESIREDNFTADDRESS,
-                new_desiredTokenId
-              )
-            ).to.be.revertedWith("NftMarketplace__NotOwner")
-          })
-
-          it("reverts if updated price AND desiredNftAddress is zero", async function () {
-            await nftMarketplace.listItem(
-              basicNft.address,
-              TOKEN_ID,
-              PRICE,
-              DESIREDNFTADDRESS,
-              desiredTokenId
-            )
-            await expect(
-              nftMarketplace.updateListing(
-                basicNft.address,
-                TOKEN_ID,
-                ZERO_PRICE,
-                ZERO_DESIREDNFTADDRESS,
-                new_desiredTokenId
-              )
-            ).to.be.revertedWith("NftMarketplace__PriceMustBeAboveZeroOrNoDesiredNftGiven")
-          })
-
-          it("reverts if not approved", async function () {
-            await nftMarketplace.listItem(
-              basicNft.address,
-              TOKEN_ID,
-              PRICE,
-              DESIREDNFTADDRESS,
-              desiredTokenId
-            )
-            await basicNft.approve("0x0000000000000000000000000000000000000000", TOKEN_ID)
-            await expect(
-              nftMarketplace.updateListing(
-                basicNft.address,
-                TOKEN_ID,
-                NEW_PRICE,
-                NEW_DESIREDNFTADDRESS,
-                new_desiredTokenId
-              )
-            ).to.be.revertedWith("NftMarketplace__NotApprovedForMarketplace")
-          })
-
-          it("updates the Listing", async function () {
-            await nftMarketplace.listItem(
-              basicNft.address,
-              TOKEN_ID,
-              PRICE,
-              DESIREDNFTADDRESS,
-              desiredTokenId
-            )
-            let listing = await nftMarketplace.getListing(basicNftContract.address, TOKEN_ID)
-            expect(listing.listingId.toString()).to.equal("1")
-            expect(listing.price.toString()).to.equal(PRICE.toString())
-            expect(listing.seller.toString()).to.equal(deployer.address.toString())
-            expect(listing.desiredNftAddress.toString()).to.equal(DESIREDNFTADDRESS.toString())
-            expect(listing.desiredTokenId.toString()).to.equal(desiredTokenId.toString())
-
-            await nftMarketplace.updateListing(
+          WOWMock = WOWMockContract.connect(deployer)
+          NEW_DESIREDNFTADDRESS = WOWMock.address
+          new_desiredTokenId = "0"
+          DESIREDNFTADDRESS = basicNft.address
+        })
+        it("reverts if not listed", async function () {
+          await expect(
+            nftMarketplace.updateListing(
               basicNft.address,
               TOKEN_ID,
               NEW_PRICE,
               NEW_DESIREDNFTADDRESS,
               new_desiredTokenId
             )
-            listing = await nftMarketplace.getListing(basicNftContract.address, TOKEN_ID)
-            expect(listing.listingId.toString()).to.equal("1")
-            expect(listing.price.toString()).to.equal(NEW_PRICE.toString())
-            expect(listing.seller.toString()).to.equal(deployer.address.toString())
-            expect(listing.desiredNftAddress.toString()).to.equal(NEW_DESIREDNFTADDRESS.toString())
-            expect(listing.desiredTokenId.toString()).to.equal(new_desiredTokenId.toString())
-          })
+          ).to.be.revertedWith("NftMarketplace__NotListed")
+        })
 
-          it("emits the correct event", async function () {
-            await nftMarketplace.listItem(
+        it("reverts if not Owner", async function () {
+          await nftMarketplace.listItem(
+            basicNft.address,
+            TOKEN_ID,
+            PRICE,
+            DESIREDNFTADDRESS,
+            desiredTokenId
+          )
+          nftMarketplace = nftMarketplaceContract.connect(user)
+          await expect(
+            nftMarketplace.updateListing(
               basicNft.address,
               TOKEN_ID,
-              PRICE,
-              DESIREDNFTADDRESS,
-              desiredTokenId
+              NEW_PRICE,
+              NEW_DESIREDNFTADDRESS,
+              new_desiredTokenId
             )
-            await expect(
-              nftMarketplace.updateListing(
-                basicNft.address,
-                TOKEN_ID,
-                NEW_PRICE,
-                NEW_DESIREDNFTADDRESS,
-                new_desiredTokenId
-              )
-            )
-              .to.emit(nftMarketplace, "ItemUpdated")
-              .withArgs(
-                deployer.address,
-                basicNft.address,
-                TOKEN_ID,
-                NEW_PRICE,
-                "1",
-                NEW_DESIREDNFTADDRESS,
-                new_desiredTokenId
-              )
-          })
+          ).to.be.revertedWith("NftMarketplace__NotOwner")
+        })
 
-          // trying if i can update an for eth or nft only to eth AND nft
-
-          it("updates the Listing from no eth to eth", async function () {
-            await nftMarketplace.listItem(
+        it("reverts if updated price AND desiredNftAddress is zero", async function () {
+          await nftMarketplace.listItem(
+            basicNft.address,
+            TOKEN_ID,
+            PRICE,
+            DESIREDNFTADDRESS,
+            desiredTokenId
+          )
+          await expect(
+            nftMarketplace.updateListing(
               basicNft.address,
               TOKEN_ID,
               ZERO_PRICE,
-              DESIREDNFTADDRESS,
-              desiredTokenId
-            )
-            let listing = await nftMarketplace.getListing(basicNftContract.address, TOKEN_ID)
-            expect(listing.listingId.toString()).to.equal("1")
-            expect(listing.price.toString()).to.equal(ZERO_PRICE.toString())
-            expect(listing.seller.toString()).to.equal(deployer.address.toString())
-            expect(listing.desiredNftAddress.toString()).to.equal(DESIREDNFTADDRESS.toString())
-            expect(listing.desiredTokenId.toString()).to.equal(desiredTokenId.toString())
-
-            await nftMarketplace.updateListing(
-              basicNft.address,
-              TOKEN_ID,
-              NEW_PRICE,
-              NEW_DESIREDNFTADDRESS,
-              new_desiredTokenId
-            )
-            listing = await nftMarketplace.getListing(basicNftContract.address, TOKEN_ID)
-            expect(listing.listingId.toString()).to.equal("1")
-            expect(listing.price.toString()).to.equal(NEW_PRICE.toString())
-            expect(listing.seller.toString()).to.equal(deployer.address.toString())
-            expect(listing.desiredNftAddress.toString()).to.equal(NEW_DESIREDNFTADDRESS.toString())
-            expect(listing.desiredTokenId.toString()).to.equal(new_desiredTokenId.toString())
-          })
-
-          it("updates the Listing from no nft to nft", async function () {
-            await nftMarketplace.listItem(
-              basicNft.address,
-              TOKEN_ID,
-              PRICE,
               ZERO_DESIREDNFTADDRESS,
-              0
+              new_desiredTokenId
             )
-            let listing = await nftMarketplace.getListing(basicNftContract.address, TOKEN_ID)
-            expect(listing.listingId.toString()).to.equal("1")
-            expect(listing.price.toString()).to.equal(PRICE.toString())
-            expect(listing.seller.toString()).to.equal(deployer.address.toString())
-            expect(listing.desiredNftAddress.toString()).to.equal(
-              ZERO_DESIREDNFTADDRESS.toString()
-            )
-            expect(listing.desiredTokenId.toString()).to.equal("0")
+          ).to.be.revertedWith("NftMarketplace__PriceMustBeAboveZeroOrNoDesiredNftGiven")
+        })
 
-            await nftMarketplace.updateListing(
+        it("reverts if not approved", async function () {
+          await nftMarketplace.listItem(
+            basicNft.address,
+            TOKEN_ID,
+            PRICE,
+            DESIREDNFTADDRESS,
+            desiredTokenId
+          )
+          await basicNft.approve("0x0000000000000000000000000000000000000000", TOKEN_ID)
+          await expect(
+            nftMarketplace.updateListing(
               basicNft.address,
               TOKEN_ID,
               NEW_PRICE,
               NEW_DESIREDNFTADDRESS,
               new_desiredTokenId
             )
-            listing = await nftMarketplace.getListing(basicNftContract.address, TOKEN_ID)
-            expect(listing.listingId.toString()).to.equal("1")
-            expect(listing.price.toString()).to.equal(NEW_PRICE.toString())
-            expect(listing.seller.toString()).to.equal(deployer.address.toString())
-            expect(listing.desiredNftAddress.toString()).to.equal(NEW_DESIREDNFTADDRESS.toString())
-            expect(listing.desiredTokenId.toString()).to.equal(new_desiredTokenId.toString())
-          })
+          ).to.be.revertedWith("NftMarketplace__NotApprovedForMarketplace")
+        })
+
+        it("updates the Listing", async function () {
+          await nftMarketplace.listItem(
+            basicNft.address,
+            TOKEN_ID,
+            PRICE,
+            DESIREDNFTADDRESS,
+            desiredTokenId
+          )
+          let listing = await nftMarketplace.getListing(basicNftContract.address, TOKEN_ID)
+          expect(listing.listingId.toString()).to.equal("1")
+          expect(listing.price.toString()).to.equal(PRICE.toString())
+          expect(listing.seller.toString()).to.equal(deployer.address.toString())
+          expect(listing.desiredNftAddress.toString()).to.equal(DESIREDNFTADDRESS.toString())
+          expect(listing.desiredTokenId.toString()).to.equal(desiredTokenId.toString())
+
+          await nftMarketplace.updateListing(
+            basicNft.address,
+            TOKEN_ID,
+            NEW_PRICE,
+            NEW_DESIREDNFTADDRESS,
+            new_desiredTokenId
+          )
+          listing = await nftMarketplace.getListing(basicNftContract.address, TOKEN_ID)
+          expect(listing.listingId.toString()).to.equal("1")
+          expect(listing.price.toString()).to.equal(NEW_PRICE.toString())
+          expect(listing.seller.toString()).to.equal(deployer.address.toString())
+          expect(listing.desiredNftAddress.toString()).to.equal(NEW_DESIREDNFTADDRESS.toString())
+          expect(listing.desiredTokenId.toString()).to.equal(new_desiredTokenId.toString())
+        })
+
+        it("emits the correct event", async function () {
+          await nftMarketplace.listItem(
+            basicNft.address,
+            TOKEN_ID,
+            PRICE,
+            DESIREDNFTADDRESS,
+            desiredTokenId
+          )
+          await expect(
+            nftMarketplace.updateListing(
+              basicNft.address,
+              TOKEN_ID,
+              NEW_PRICE,
+              NEW_DESIREDNFTADDRESS,
+              new_desiredTokenId
+            )
+          )
+            .to.emit(nftMarketplace, "ItemUpdated")
+            .withArgs(
+              deployer.address,
+              basicNft.address,
+              TOKEN_ID,
+              NEW_PRICE,
+              "1",
+              NEW_DESIREDNFTADDRESS,
+              new_desiredTokenId
+            )
+        })
+      })
+
+      describe("trying if i can update an for eth or nft only to eth AND nft", () => {
+        beforeEach(async () => {
+          otherUser = accounts[2]
+
+          const WOWMockInfo = await deployments.get("WorldOfWomenMock")
+          WOWMockContract = await ethers.getContractAt("WorldOfWomenMock", WOWMockInfo.address)
+          WOWMock = WOWMockContract.connect(otherUser)
+
+          await WOWMock.mint(1, { value: ethers.utils.parseEther("0.000001") })
+          await WOWMock.approve(nftMarketplaceContract.address, TOKEN_ID)
+
+          WOWMock = WOWMockContract.connect(deployer)
+          NEW_DESIREDNFTADDRESS = WOWMock.address
+          new_desiredTokenId = "0"
+          DESIREDNFTADDRESS = basicNft.address
+        })
+        it("updates the Listing from no eth to eth", async function () {
+          await nftMarketplace.listItem(
+            basicNft.address,
+            TOKEN_ID,
+            ZERO_PRICE,
+            DESIREDNFTADDRESS,
+            desiredTokenId
+          )
+          let listing = await nftMarketplace.getListing(basicNftContract.address, TOKEN_ID)
+          expect(listing.listingId.toString()).to.equal("1")
+          expect(listing.price.toString()).to.equal(ZERO_PRICE.toString())
+          expect(listing.seller.toString()).to.equal(deployer.address.toString())
+          expect(listing.desiredNftAddress.toString()).to.equal(DESIREDNFTADDRESS.toString())
+          expect(listing.desiredTokenId.toString()).to.equal(desiredTokenId.toString())
+
+          await nftMarketplace.updateListing(
+            basicNft.address,
+            TOKEN_ID,
+            NEW_PRICE,
+            NEW_DESIREDNFTADDRESS,
+            new_desiredTokenId
+          )
+          listing = await nftMarketplace.getListing(basicNftContract.address, TOKEN_ID)
+          expect(listing.listingId.toString()).to.equal("1")
+          expect(listing.price.toString()).to.equal(NEW_PRICE.toString())
+          expect(listing.seller.toString()).to.equal(deployer.address.toString())
+          expect(listing.desiredNftAddress.toString()).to.equal(NEW_DESIREDNFTADDRESS.toString())
+          expect(listing.desiredTokenId.toString()).to.equal(new_desiredTokenId.toString())
+        })
+
+        it("updates the Listing from no nft to nft", async function () {
+          await nftMarketplace.listItem(
+            basicNft.address,
+            TOKEN_ID,
+            PRICE,
+            ZERO_DESIREDNFTADDRESS,
+            0
+          )
+          let listing = await nftMarketplace.getListing(basicNftContract.address, TOKEN_ID)
+          expect(listing.listingId.toString()).to.equal("1")
+          expect(listing.price.toString()).to.equal(PRICE.toString())
+          expect(listing.seller.toString()).to.equal(deployer.address.toString())
+          expect(listing.desiredNftAddress.toString()).to.equal(ZERO_DESIREDNFTADDRESS.toString())
+          expect(listing.desiredTokenId.toString()).to.equal("0")
+
+          await nftMarketplace.updateListing(
+            basicNft.address,
+            TOKEN_ID,
+            NEW_PRICE,
+            NEW_DESIREDNFTADDRESS,
+            new_desiredTokenId
+          )
+          listing = await nftMarketplace.getListing(basicNftContract.address, TOKEN_ID)
+          expect(listing.listingId.toString()).to.equal("1")
+          expect(listing.price.toString()).to.equal(NEW_PRICE.toString())
+          expect(listing.seller.toString()).to.equal(deployer.address.toString())
+          expect(listing.desiredNftAddress.toString()).to.equal(NEW_DESIREDNFTADDRESS.toString())
+          expect(listing.desiredTokenId.toString()).to.equal(new_desiredTokenId.toString())
+        })
+      })
+      describe("Test with RegularNft", () => {
+        beforeEach(async () => {
+          const regularNftInfo = await deployments.get("RegularNft")
+          regularNftContract = await ethers.getContractAt("RegularNft", regularNftInfo.address)
+          regularNft = regularNftContract.connect(deployer)
+          DESIREDNFTADDRESS = regularNft.address
+          desiredTokenId = 2
+          otherUser = accounts[2]
+          // so the regularNft has a only owner modifier for the mint function, thats why i have to mint it with the deployer and then approve it for the user.
+          await regularNft.mint(user.address)
+          await regularNft.mint(otherUser.address)
+          regularNft = regularNftContract.connect(user)
+          // so the regularNft starts counting there tokenId at 1.
+          await regularNft.approve(nftMarketplaceContract.address, 1)
+          regularNft = regularNftContract.connect(otherUser)
+          await regularNft.approve(nftMarketplaceContract.address, 2)
+          nftMarketplace = nftMarketplaceContract.connect(user)
+        })
+        it("transfers the desiredNft to the seller", async function () {
+          await nftMarketplace.listItem(
+            regularNft.address,
+            1,
+            PRICE,
+            DESIREDNFTADDRESS,
+            desiredTokenId
+          )
+          nftMarketplace = nftMarketplaceContract.connect(otherUser)
+          await nftMarketplace.buyItem(regularNft.address, 1, { value: PRICE })
+          expect(await regularNft.ownerOf(desiredTokenId)).to.equal(user.address)
+        })
+
+        it("actually transfers the correct nft from the seller to the user ", async function () {
+          await nftMarketplace.listItem(
+            regularNft.address,
+            1,
+            PRICE,
+            DESIREDNFTADDRESS,
+            desiredTokenId
+          )
+          nftMarketplace = nftMarketplaceContract.connect(otherUser)
+          await nftMarketplace.buyItem(regularNft.address, 1, { value: PRICE })
+          expect(await regularNft.ownerOf(1)).to.equal(otherUser.address)
+        })
+
+        it("transfers the ETH correctly", async function () {
+          await nftMarketplace.listItem(
+            regularNft.address,
+            1,
+            PRICE,
+            DESIREDNFTADDRESS,
+            desiredTokenId
+          )
+          nftMarketplace = nftMarketplaceContract.connect(otherUser)
+
+          const otherUserStartingBalance = await otherUser.getBalance()
+          const nftMarketplaceStartingBalance = await nftMarketplace.getBalance()
+
+          // this is calling the buyItem function, but also extracting the GasCosts, so that they can be considered when comapring the starting and ending balance.
+          let buyItemGasCosts = null
+          {
+            const txRp = await nftMarketplace.buyItem(regularNft.address, 1, {
+              value: PRICE,
+            })
+            const txRc = await txRp.wait(1)
+            const { gasUsed, effectiveGasPrice } = txRc
+            buyItemGasCosts = gasUsed.mul(effectiveGasPrice)
+          }
+
+          const otherUserEndingBalance = await otherUser.getBalance()
+          const nftMarketplaceEndingBalance = await nftMarketplace.getBalance()
+
+          expect(otherUserStartingBalance.sub(PRICE).sub(buyItemGasCosts).toString()).to.equal(
+            otherUserEndingBalance.toString()
+          )
+          expect(nftMarketplaceStartingBalance.add(PRICE).toString()).to.equal(
+            nftMarketplaceEndingBalance.toString()
+          )
         })
       })
 
