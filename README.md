@@ -229,6 +229,7 @@ ipfs://bafybeiebybpizpuwg7dddeqeeengk2uro6qmzjm5gpcxmnded47jcdpwmu/DogeNFT.jpg
 Doge NFT metadata.json IPFS link from nft.storage
 ipfs://bafybeiebybpizpuwg7dddeqeeengk2uro6qmzjm5gpcxmnded47jcdpwmu/metadata.json
 
+deploying "RegularNft" (tx: 0x469fb3cf0cdf870996b0e3b6d8370608b7523206793ecd58cc4c20494cdda61f)...: deployed at 0x474ecBebfdD671179AF2ea5880E5eE881658ECFb with 2762469 gas
 
 
 Notes on the different nft contracts:

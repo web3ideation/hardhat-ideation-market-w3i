@@ -3,7 +3,7 @@ const readlineSync = require("readline-sync")
 
 const PRICE = ethers.utils.parseEther("0.1")
 
-async function WOWList() {
+async function regularList() {
   //   let nftMarketplace, nftMarketplaceContract, basicNft, basicNftContract
   //   const PRICE = ethers.utils.parseEther("0.1")
   //   const NEW_PRICE = ethers.utils.parseEther("0.05")
@@ -20,8 +20,8 @@ async function WOWList() {
   //   nftMarketplace = nftMarketplaceContract.connect(deployer)
   //   const basicNftInfo = await deployments.get("BasicNft")
 
-  const wowInfo = await deployments.get("WorldOfWomenMock")
-  const wow = await ethers.getContractAt("WorldOfWomenMock", wowInfo.address)
+  const regularNftInfo = await deployments.get("WorldOfWomenMock")
+  const regularNft = await ethers.getContractAt("WorldOfWomenMock", regularNftInfo.address)
 
   //   basicNft = basicNftContract.connect(deployer)
 
@@ -36,12 +36,12 @@ async function WOWList() {
   // Rest of your code that uses tokenId goes here
 
   console.log("Approving NFT")
-  const approvalTx = await wow.approve(nftMarketplace.address, tokenId)
+  const approvalTx = await regularNft.approve(nftMarketplace.address, tokenId)
   await approvalTx.wait(1)
 
   console.log("Listing NFT")
   const listTx = await nftMarketplace.listItem(
-    wow.address,
+    regularNft.address,
     tokenId,
     PRICE,
     "0x0000000000000000000000000000000000000000",
@@ -54,7 +54,7 @@ async function WOWList() {
   //   await nftMarketplace.getListing(basicNftContract.address, TOKEN_ID)
 }
 
-WOWList()
+regularList()
   .then(() => process.exit(0))
   .catch((error) => {
     console.error(error)

@@ -2,7 +2,7 @@ const { network, deployments, ethers } = require("hardhat")
 
 // const PRICE = ethers.utils.parseEther("0.1")
 
-async function WOWmint() {
+async function WOWMint() {
   //   let nftMarketplace, nftMarketplaceContract, basicNft, basicNftContract
   //   const PRICE = ethers.utils.parseEther("0.1")
   //   const NEW_PRICE = ethers.utils.parseEther("0.05")
@@ -43,7 +43,7 @@ async function WOWmint() {
   //   await nftMarketplace.getListing(basicNftContract.address, TOKEN_ID)
 }
 
-WOWmint()
+WOWMint()
   .then(() => process.exit(0))
   .catch((error) => {
     console.error(error)
