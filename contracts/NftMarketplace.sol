@@ -5,19 +5,16 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "hardhat/console.sol";
 
-error NftMarketplace__PriceMustBeAboveZeroOrNoDesiredNftGiven();
 error NftMarketplace__NotApprovedForMarketplace();
-error NftMarketplace__AlreadyListed(address nftAddress, uint256 tokenId);
 error NftMarketplace__NotOwner(uint256 tokenId, address nftAddress, address nftOwner); // !!!W all those arguments might be too much unnecessary information. does it safe gas or sth if i leave it out?
-error NftMarketplace__NotListed(address nftAddress, uint256 tokenId);
 error NftMarketplace__PriceNotMet(address nftAddress, uint256 tokenId, uint256 price);
 error NftMarketplace__NoProceeds();
 error NftMarketplace__TransferFailed();
 
 contract NftMarketplace is ReentrancyGuard {
     struct Listing {
-        uint256 s_listingId; // *** I want that every Listing has a uinque Lising Number, just like in the real world :) !!!W then it would make sense to just always let the functions also work if only the listingId is given in the args
-        // bool isListed;
+        uint256 s_listingId; // *** I want that every Listing has a uinque Lising Number, just like in the real world :)
+        // !!!W then it would make sense to just always let the functions also work if only the listingId is given in the args, also the errors should only return the listingId and not the nftAddress and tokenId
         uint256 price;
         address seller;
         address desiredNftAddress; // Desired NFTs for swap !!!W find a way to have multiple desiredNftAddresses ( and / or ) - maybe by using an array here(?)
@@ -25,44 +22,51 @@ contract NftMarketplace is ReentrancyGuard {
     } // *** also find a way to have the seller list their nft for swap WITH additional ETH. so that they can say i want my 1ETH worth NFT to be swapped against this specific NFT AND 0.3 ETH.
 
     event ItemListed(
-        address indexed seller,
+        uint256 indexed s_listingId,
         address indexed nftAddress,
         uint256 indexed tokenId,
+        bool isListed,
         uint256 price,
-        uint256 s_listingId,
+        address seller,
         address desiredNftAddress,
         uint256 desiredTokenId
     );
-    // !!!W should i add the seller to this event?
+    // *** should i add the seller to this event?
     event ItemBought(
-        address indexed buyer,
+        uint256 indexed s_listingId,
         address indexed nftAddress,
         uint256 indexed tokenId,
+        bool isListed,
         uint256 price,
-        uint256 s_listingId,
+        address seller,
+        address buyer,
         address desiredNftAddress,
         uint256 desiredTokenId
     );
 
     event ItemCanceled(
-        address indexed seller,
+        uint256 indexed s_listingId,
         address indexed nftAddress,
         uint256 indexed tokenId,
-        uint256 s_listingId,
+        bool isListed,
+        uint256 price,
+        address seller,
         address desiredNftAddress,
         uint256 desiredTokenId
     );
     event ItemUpdated(
-        address indexed seller,
+        uint256 indexed s_listingId,
         address indexed nftAddress,
         uint256 indexed tokenId,
+        bool isListed,
         uint256 price,
-        uint256 s_listingId,
+        address seller,
         address desiredNftAddress,
         uint256 desiredTokenId
     );
 
     // !!!W the listing mapping could be aswell be defined by listing ID instead of NFT. That would be a more streamlined experience
+    // !!!W add that all the info of the s_listings mapping can be returned when calling a getter function with the listingId as the parameter/argument
     // NFT Contract address -> NFT TokenID -> Listing
     mapping(address => mapping(uint256 => Listing)) private s_listings;
 
@@ -71,35 +75,28 @@ contract NftMarketplace is ReentrancyGuard {
 
     IERC721 nft; // !!!W test if its a problem to have this declared here and not in every function extra, if multiple users use the contracts functions at the same time. I think i actually could just declare this in each function again and again and work with the input arguments and returns to let the data flow
     // !!!W cGPT mentioned: Declaring nft at the contract level can lead to potential issues if multiple functions are called concurrently. It's safer to declare it within each function where it's needed.
-    uint256 s_listingId = 0; // !!!W add that all the info of the s_listings mapping can be returned when calling a getter function with the listingId as the parameter/argument
-    // !!!W does listingId need to be s_listingId?
+    uint256 s_listingId = 0;
 
     ///////////////
     // Modifiers //
     ///////////////
 
     // nonReentrant Modifier is inherited
-    // !!!W cGPT mentioned: Your modifiers are well-structured. For gas efficiency, it's often better to use require statements instead of multiple modifiers, but for clarity and reusability, modifiers are great.
 
     modifier notListed(address nftAddress, uint256 tokenId) {
-        Listing memory listing = s_listings[nftAddress][tokenId];
-        if (listing.price > 0 || listing.desiredNftAddress != address(0)) {
-            // this makes sense bc if the listing doesnt exist the price wouldnt be greater than 0. but when it does exist the price IS greater than zero.
-            // !!!W But i think it would be more professional to actually check if the nftAddress tokenId actually exists rather than this kinda workaround...
-            revert NftMarketplace__AlreadyListed(nftAddress, tokenId);
-        }
+        require(
+            s_listings[nftAddress][tokenId].seller == address(0),
+            "NftMarketplace__AlreadyListed"
+        );
         _;
     }
-    // !!!W cGPT mentioned: Checking for the existence of a listing based on its price might not be the most intuitive. It's better to have an explicit bool field, say isListed, in the Listing struct.
 
     modifier isListed(address nftAddress, uint256 tokenId) {
-        Listing memory listing = s_listings[nftAddress][tokenId];
-        if (listing.price <= 0 && listing.desiredNftAddress == address(0)) {
-            revert NftMarketplace__NotListed(nftAddress, tokenId);
-        }
+        require(s_listings[nftAddress][tokenId].seller != address(0), "NftMarketplace__NotListed");
         _;
     }
 
+    // !!!W isnt that a modifier only owner which i inherited from open zeplin of something?? then i could just use that instead of making my own
     modifier isOwner(
         address nftAddress,
         uint256 tokenId,
@@ -141,10 +138,10 @@ contract NftMarketplace is ReentrancyGuard {
         notListed(nftAddress, tokenId)
         isOwner(nftAddress, tokenId, msg.sender)
     {
-        if (price <= 0 && desiredNftAddress == address(0)) {
-            // !!!W this is a quick fix for what cGPT mentioned. Check if thats a good solution or if i should enhance. -  It seems that the listItem function checks for the price to be above zero, even for swap listings. This restriction should probably be removed or modified in the contract for swap listings since the price is not necessarily relevant in such cases.
-            revert NftMarketplace__PriceMustBeAboveZeroOrNoDesiredNftGiven();
-        }
+        require(
+            price > 0 || desiredNftAddress != address(0),
+            "NftMarketplace__PriceMustBeAboveZeroOrNoDesiredNftGiven"
+        );
 
         // info: approve the NFT Marketplace to transfer the NFT (that way the Owner is keeping the NFT in their wallet until someone bougt it from the marketplace)
         checkApproval(nftAddress, tokenId);
@@ -159,6 +156,7 @@ contract NftMarketplace is ReentrancyGuard {
         emit ItemListed(
             msg.sender,
             nftAddress,
+            true,
             tokenId,
             price,
             s_listingId,
@@ -250,10 +248,11 @@ contract NftMarketplace is ReentrancyGuard {
         address newDesiredNftAddress,
         uint256 newdesiredTokenId
     ) external isListed(nftAddress, tokenId) isOwner(nftAddress, tokenId, msg.sender) {
-        if (newPrice <= 0 && newDesiredNftAddress == address(0)) {
-            // *** patrick didnt make sure that the updated price would be above 0 in his contract
-            revert NftMarketplace__PriceMustBeAboveZeroOrNoDesiredNftGiven();
-        }
+        // *** patrick didnt make sure that the updated price would be above 0 in his contract
+        require(
+            newPrice > 0 || newDesiredNftAddress != address(0),
+            "NftMarketplace__PriceMustBeAboveZeroOrNoDesiredNftGiven"
+        );
         checkApproval(nftAddress, tokenId); // *** patrick didnt check if the approval is still given in his contract
         Listing memory listedItem = s_listings[nftAddress][tokenId];
         listedItem.price = newPrice;

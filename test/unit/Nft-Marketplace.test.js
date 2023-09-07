@@ -1,5 +1,7 @@
 // !!!W i didnt do staging tests - think which ones would make sense or if i can just run this test also on the testnet.
 // !!!W try running this test on the forked hh network
+// !!!W change the events based on what I actually emit in the contract since the isListed boolean
+// !!!W putting out nfts FOR FREE is possible now! edit the tests accordingly
 const { assert, expect } = require("chai")
 const { network, deployments, ethers } = require("hardhat")
 const { developmentChains } = require("../../helper-hardhat-config")
