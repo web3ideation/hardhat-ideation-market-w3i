@@ -16,29 +16,30 @@ error NftMarketplace__TransferFailed();
 
 contract NftMarketplace is ReentrancyGuard {
     struct Listing {
-        uint256 listingId; // *** I want that every Listing has a uinque Lising Number, just like in the real world :) then it would make sense to just always let the functions also work if only the listingId is given in the args
+        uint256 s_listingId; // *** I want that every Listing has a uinque Lising Number, just like in the real world :) !!!W then it would make sense to just always let the functions also work if only the listingId is given in the args
+        // bool isListed;
         uint256 price;
         address seller;
         address desiredNftAddress; // Desired NFTs for swap !!!W find a way to have multiple desiredNftAddresses ( and / or ) - maybe by using an array here(?)
         uint256 desiredTokenId; // Desired token IDs for swap !!!W find a way to have multiple desiredNftAddresses ( and / or ) - maybe by using an array here(?)
-    } // !!!W also find a way to have the seller list their nft for swap WITH additional ETH. so that they can say i want my 1ETH worth NFT to be swapped against this specific NFT AND 0.3 ETH.
+    } // *** also find a way to have the seller list their nft for swap WITH additional ETH. so that they can say i want my 1ETH worth NFT to be swapped against this specific NFT AND 0.3 ETH.
 
     event ItemListed(
         address indexed seller,
         address indexed nftAddress,
         uint256 indexed tokenId,
         uint256 price,
-        uint256 listingId,
+        uint256 s_listingId,
         address desiredNftAddress,
         uint256 desiredTokenId
     );
-    // should i add the seller to this event?
+    // !!!W should i add the seller to this event?
     event ItemBought(
         address indexed buyer,
         address indexed nftAddress,
         uint256 indexed tokenId,
         uint256 price,
-        uint256 listingId,
+        uint256 s_listingId,
         address desiredNftAddress,
         uint256 desiredTokenId
     );
@@ -47,7 +48,7 @@ contract NftMarketplace is ReentrancyGuard {
         address indexed seller,
         address indexed nftAddress,
         uint256 indexed tokenId,
-        uint256 listingId,
+        uint256 s_listingId,
         address desiredNftAddress,
         uint256 desiredTokenId
     );
@@ -56,7 +57,7 @@ contract NftMarketplace is ReentrancyGuard {
         address indexed nftAddress,
         uint256 indexed tokenId,
         uint256 price,
-        uint256 listingId,
+        uint256 s_listingId,
         address desiredNftAddress,
         uint256 desiredTokenId
     );
@@ -70,9 +71,8 @@ contract NftMarketplace is ReentrancyGuard {
 
     IERC721 nft; // !!!W test if its a problem to have this declared here and not in every function extra, if multiple users use the contracts functions at the same time. I think i actually could just declare this in each function again and again and work with the input arguments and returns to let the data flow
     // !!!W cGPT mentioned: Declaring nft at the contract level can lead to potential issues if multiple functions are called concurrently. It's safer to declare it within each function where it's needed.
-    uint256 listingId = 0; // !!!W add that all the info of the s_listings mapping can be returned when calling a getter function with the listingId as the parameter/argument
+    uint256 s_listingId = 0; // !!!W add that all the info of the s_listings mapping can be returned when calling a getter function with the listingId as the parameter/argument
     // !!!W does listingId need to be s_listingId?
-    // !!!W wouldn a uint256 limit me in how many NFTs can be offered on my marketplace? Which datatype should I use to make sure this nft marketplace can be run for 1000 Years, looking at how many nfts open Sea has registered since the NFT Boom and calculating that value up to 1000 Years?
 
     ///////////////
     // Modifiers //
@@ -148,9 +148,9 @@ contract NftMarketplace is ReentrancyGuard {
 
         // info: approve the NFT Marketplace to transfer the NFT (that way the Owner is keeping the NFT in their wallet until someone bougt it from the marketplace)
         checkApproval(nftAddress, tokenId);
-        listingId++;
+        s_listingId++;
         s_listings[nftAddress][tokenId] = Listing(
-            listingId,
+            s_listingId,
             price,
             msg.sender,
             desiredNftAddress,
@@ -161,7 +161,7 @@ contract NftMarketplace is ReentrancyGuard {
             nftAddress,
             tokenId,
             price,
-            listingId,
+            s_listingId,
             desiredNftAddress,
             desiredTokenId
         );
@@ -216,7 +216,7 @@ contract NftMarketplace is ReentrancyGuard {
                 nftAddress,
                 tokenId,
                 listedItem.price,
-                listedItem.listingId,
+                listedItem.s_listingId,
                 listedItem.desiredNftAddress,
                 listedItem.desiredTokenId
             ); // !!!W Patrick said that the event emitted is technically not save from reantrancy attacks. figure out how and why and make it safe.
@@ -234,7 +234,7 @@ contract NftMarketplace is ReentrancyGuard {
             msg.sender,
             nftAddress,
             tokenId,
-            listedItem.listingId,
+            listedItem.s_listingId,
             listedItem.desiredNftAddress,
             listedItem.desiredTokenId
         );
@@ -265,7 +265,7 @@ contract NftMarketplace is ReentrancyGuard {
             nftAddress,
             tokenId,
             listedItem.price,
-            listedItem.listingId, // !!!W check if the listingId stays the same, even if between the listItem creation and the updateListing have been other listings created and deleted
+            listedItem.s_listingId, // !!!W check if the listingId stays the same, even if between the listItem creation and the updateListing have been other listings created and deleted
             listedItem.desiredNftAddress,
             listedItem.desiredTokenId
         );
@@ -297,7 +297,7 @@ contract NftMarketplace is ReentrancyGuard {
     }
 
     function getNextListingId() external view returns (uint256) {
-        return listingId; // *** With this function people can find out what the next Listing Id would be
+        return s_listingId; // *** With this function people can find out what the next Listing Id would be
     }
 
     function getBalance() external view returns (uint256) {
