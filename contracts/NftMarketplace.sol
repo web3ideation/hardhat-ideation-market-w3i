@@ -15,6 +15,7 @@ contract NftMarketplace is ReentrancyGuard {
     struct Listing {
         uint256 s_listingId; // *** I want that every Listing has a uinque Lising Number, just like in the real world :)
         // !!!W then it would make sense to just always let the functions also work if only the listingId is given in the args, also the errors should only return the listingId and not the nftAddress and tokenId
+        // !!!W I think this should be listingId instead of s_listingId, because the s_listingId is the one in line 73 where it counts up and is saved directly in storage rather than in the struct.
         uint256 price;
         address seller;
         address desiredNftAddress; // Desired NFTs for swap !!!W find a way to have multiple desiredNftAddresses ( and / or ) - maybe by using an array here(?)
@@ -54,6 +55,7 @@ contract NftMarketplace is ReentrancyGuard {
         address desiredNftAddress,
         uint256 desiredTokenId
     );
+
     event ItemUpdated(
         uint256 indexed s_listingId,
         address indexed nftAddress,
@@ -138,10 +140,11 @@ contract NftMarketplace is ReentrancyGuard {
         notListed(nftAddress, tokenId)
         isOwner(nftAddress, tokenId, msg.sender)
     {
-        require(
-            price > 0 || desiredNftAddress != address(0),
-            "NftMarketplace__PriceMustBeAboveZeroOrNoDesiredNftGiven"
-        );
+        // !!!W since the already listed / not listed modifiers dont use the price anymore but the seller, i dont need to check if the price is above 0 anymore. -> delte this check
+        // require(
+        //     price > 0 || desiredNftAddress != address(0),
+        //     "NftMarketplace__PriceMustBeAboveZeroOrNoDesiredNftGiven"
+        // );
 
         // info: approve the NFT Marketplace to transfer the NFT (that way the Owner is keeping the NFT in their wallet until someone bougt it from the marketplace)
         checkApproval(nftAddress, tokenId);
@@ -154,12 +157,12 @@ contract NftMarketplace is ReentrancyGuard {
             desiredTokenId
         );
         emit ItemListed(
-            msg.sender,
+            s_listingId, // !!!W would it be more gas efficient to use listeditems.s_listingId instead of s_listingId? Because this way is reading from the storage and the other way from the memory, right?
             nftAddress,
-            true,
             tokenId,
+            true,
             price,
-            s_listingId,
+            msg.sender,
             desiredNftAddress,
             desiredTokenId
         );
@@ -175,6 +178,7 @@ contract NftMarketplace is ReentrancyGuard {
         }
     }
 
+    // !!!W I think there should be a ~10 minute threshold of people being able to buy a newly listed nft, since it might be that the seller made a mistake and wants to use the update function. so put in something like a counter of blocks mined since the listing of that specific nft to be bought. It should be visible in the frontend aswell tho, that this nft is not yet to be bought but in ~10 minutes.
     function buyItem(
         address nftAddress, // !!!W should i rather work with the listingId of the struct? that seems more streamlined...
         uint256 tokenId
@@ -210,11 +214,13 @@ contract NftMarketplace is ReentrancyGuard {
 
             delete (s_listings[nftAddress][tokenId]);
             emit ItemBought(
-                msg.sender,
+                listedItem.s_listingId,
                 nftAddress,
                 tokenId,
+                false,
                 listedItem.price,
-                listedItem.s_listingId,
+                listedItem.seller,
+                msg.sender,
                 listedItem.desiredNftAddress,
                 listedItem.desiredTokenId
             ); // !!!W Patrick said that the event emitted is technically not save from reantrancy attacks. figure out how and why and make it safe.
@@ -225,14 +231,16 @@ contract NftMarketplace is ReentrancyGuard {
         address nftAddress,
         uint256 tokenId
     ) external isListed(nftAddress, tokenId) isOwner(nftAddress, tokenId, msg.sender) {
-        Listing memory listedItem = s_listings[nftAddress][tokenId];
+        Listing memory listedItem = s_listings[nftAddress][tokenId]; // what happens to this memory variable after the struct in the mapping has been deleted and after the function has been executed? does it get deleted automatically?
         delete (s_listings[nftAddress][tokenId]);
 
         emit ItemCanceled(
-            msg.sender,
+            listedItem.s_listingId,
             nftAddress,
             tokenId,
-            listedItem.s_listingId,
+            false,
+            listedItem.price,
+            msg.sender,
             listedItem.desiredNftAddress,
             listedItem.desiredTokenId
         );
@@ -249,10 +257,11 @@ contract NftMarketplace is ReentrancyGuard {
         uint256 newdesiredTokenId
     ) external isListed(nftAddress, tokenId) isOwner(nftAddress, tokenId, msg.sender) {
         // *** patrick didnt make sure that the updated price would be above 0 in his contract
-        require(
-            newPrice > 0 || newDesiredNftAddress != address(0),
-            "NftMarketplace__PriceMustBeAboveZeroOrNoDesiredNftGiven"
-        );
+        // !!!W since the already listed / not listed modifiers dont use the price anymore but the seller, i dont need to check if the price is above 0 anymore. -> delte this check
+        // require(
+        //     newPrice > 0 || newDesiredNftAddress != address(0),
+        //     "NftMarketplace__PriceMustBeAboveZeroOrNoDesiredNftGiven"
+        // );
         checkApproval(nftAddress, tokenId); // *** patrick didnt check if the approval is still given in his contract
         Listing memory listedItem = s_listings[nftAddress][tokenId];
         listedItem.price = newPrice;
@@ -260,11 +269,12 @@ contract NftMarketplace is ReentrancyGuard {
         listedItem.desiredTokenId = newdesiredTokenId;
         s_listings[nftAddress][tokenId] = listedItem;
         emit ItemUpdated(
-            msg.sender,
+            listedItem.s_listingId, // !!!W test if the listingId stays the same, even if between the listItem creation and the updateListing have been other listings created and deleted
             nftAddress,
             tokenId,
+            true,
             listedItem.price,
-            listedItem.s_listingId, // !!!W check if the listingId stays the same, even if between the listItem creation and the updateListing have been other listings created and deleted
+            msg.sender,
             listedItem.desiredNftAddress,
             listedItem.desiredTokenId
         );
@@ -278,6 +288,7 @@ contract NftMarketplace is ReentrancyGuard {
         }
         s_proceeds[msg.sender] = 0;
         payable(msg.sender).transfer(proceeds); // *** I'm using this instead of Patricks (bool success, ) = payable(msg.sender).call{value: proceeds}(""); require(success, "NftMarketplace__TransferFailed");`bc mine reverts on its own when it doesnt succeed, and therby I consider it better!
+        // should this function also emit an event? just for being able to track when somebody withdrew?
     }
 
     //////////////////////

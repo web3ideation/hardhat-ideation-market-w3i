@@ -1,7 +1,6 @@
 // !!!W i didnt do staging tests - think which ones would make sense or if i can just run this test also on the testnet.
 // !!!W try running this test on the forked hh network
-// !!!W change the events based on what I actually emit in the contract since the isListed boolean
-// !!!W putting out nfts FOR FREE is possible now! edit the tests accordingly
+///////////// !!!W putting out nfts FOR FREE is possible now! edit the tests accordingly
 const { assert, expect } = require("chai")
 const { network, deployments, ethers } = require("hardhat")
 const { developmentChains } = require("../../helper-hardhat-config")
@@ -116,10 +115,12 @@ const { developmentChains } = require("../../helper-hardhat-config")
           await expect(nftMarketplace.cancelListing(basicNft.address, TOKEN_ID))
             .to.emit(nftMarketplace, "ItemCanceled")
             .withArgs(
-              deployer.address,
+              "1",
               basicNft.address,
               TOKEN_ID,
-              "1",
+              false,
+              PRICE,
+              deployer.address,
               ZERO_DESIREDNFTADDRESS,
               desiredTokenId
             )
@@ -182,7 +183,7 @@ const { developmentChains } = require("../../helper-hardhat-config")
           ).to.be.revertedWith("NftMarketplace__NotOwner")
         })
 
-        it("reverts if price AND desiredNftAddress is zero", async function () {
+        it("allows listing the nft for free", async function () {
           await expect(
             nftMarketplace.listItem(
               basicNft.address,
@@ -191,7 +192,18 @@ const { developmentChains } = require("../../helper-hardhat-config")
               ZERO_DESIREDNFTADDRESS,
               desiredTokenId
             )
-          ).to.be.revertedWith("NftMarketplace__PriceMustBeAboveZeroOrNoDesiredNftGiven")
+          )
+            .to.emit(nftMarketplace, "ItemListed")
+            .withArgs(
+              "1",
+              basicNft.address,
+              TOKEN_ID,
+              true,
+              "0",
+              deployer.address,
+              ZERO_DESIREDNFTADDRESS,
+              desiredTokenId
+            )
         })
 
         it("reverts if price < 0", async function () {
@@ -219,7 +231,7 @@ const { developmentChains } = require("../../helper-hardhat-config")
           ).to.be.revertedWith("NftMarketplace__NotApprovedForMarketplace")
         })
 
-        it("creates the Listing", async function () {
+        it("creates the Listing struct", async function () {
           await nftMarketplace.listItem(
             basicNft.address,
             TOKEN_ID,
@@ -247,11 +259,12 @@ const { developmentChains } = require("../../helper-hardhat-config")
           )
             .to.emit(nftMarketplace, "ItemListed")
             .withArgs(
-              deployer.address,
+              "1",
               basicNft.address,
               TOKEN_ID,
+              true,
               PRICE,
-              "1",
+              deployer.address,
               ZERO_DESIREDNFTADDRESS,
               desiredTokenId
             )
@@ -318,11 +331,13 @@ const { developmentChains } = require("../../helper-hardhat-config")
           await expect(nftMarketplace.buyItem(basicNft.address, TOKEN_ID, { value: PRICE }))
             .to.emit(nftMarketplace, "ItemBought")
             .withArgs(
-              user.address,
+              "1",
               basicNft.address,
               TOKEN_ID,
+              false,
               PRICE,
-              "1",
+              deployer.address,
+              user.address,
               ZERO_DESIREDNFTADDRESS,
               desiredTokenId
             )
@@ -344,11 +359,13 @@ const { developmentChains } = require("../../helper-hardhat-config")
           )
             .to.emit(nftMarketplace, "ItemBought")
             .withArgs(
-              user.address,
+              "1",
               basicNft.address,
               TOKEN_ID,
+              false,
               PRICE,
-              "1",
+              deployer.address,
+              user.address,
               ZERO_DESIREDNFTADDRESS,
               desiredTokenId
             )
@@ -470,7 +487,7 @@ const { developmentChains } = require("../../helper-hardhat-config")
           ).to.be.revertedWith("NftMarketplace__NotOwner")
         })
 
-        it("reverts if updated price AND desiredNftAddress is zero", async function () {
+        it("allows listing the nft for free", async function () {
           await nftMarketplace.listItem(
             basicNft.address,
             TOKEN_ID,
@@ -486,7 +503,18 @@ const { developmentChains } = require("../../helper-hardhat-config")
               ZERO_DESIREDNFTADDRESS,
               desiredTokenId
             )
-          ).to.be.revertedWith("NftMarketplace__PriceMustBeAboveZeroOrNoDesiredNftGiven")
+          )
+            .to.emit(nftMarketplace, "ItemUpdated")
+            .withArgs(
+              "1",
+              basicNft.address,
+              TOKEN_ID,
+              true,
+              ZERO_PRICE,
+              deployer.address,
+              ZERO_DESIREDNFTADDRESS,
+              desiredTokenId
+            )
         })
 
         it("reverts if not approved", async function () {
@@ -555,11 +583,12 @@ const { developmentChains } = require("../../helper-hardhat-config")
           )
             .to.emit(nftMarketplace, "ItemUpdated")
             .withArgs(
-              deployer.address,
+              "1",
               basicNft.address,
               TOKEN_ID,
+              true,
               NEW_PRICE,
-              "1",
+              deployer.address,
               ZERO_DESIREDNFTADDRESS,
               desiredTokenId
             )
@@ -716,7 +745,7 @@ const { developmentChains } = require("../../helper-hardhat-config")
           ).to.be.revertedWith("NftMarketplace__NotOwner")
         })
 
-        it("reverts if price AND desiredNftAddress is zero", async function () {
+        it("allows listing the nft for free", async function () {
           await expect(
             nftMarketplace.listItem(
               basicNft.address,
@@ -725,7 +754,18 @@ const { developmentChains } = require("../../helper-hardhat-config")
               ZERO_DESIREDNFTADDRESS,
               desiredTokenId
             )
-          ).to.be.revertedWith("NftMarketplace__PriceMustBeAboveZeroOrNoDesiredNftGiven")
+          )
+            .to.emit(nftMarketplace, "ItemListed")
+            .withArgs(
+              "1",
+              basicNft.address,
+              TOKEN_ID,
+              true,
+              ZERO_PRICE,
+              deployer.address,
+              ZERO_DESIREDNFTADDRESS,
+              desiredTokenId
+            )
         })
 
         it("reverts if price < 0", async function () {
@@ -781,11 +821,12 @@ const { developmentChains } = require("../../helper-hardhat-config")
           )
             .to.emit(nftMarketplace, "ItemListed")
             .withArgs(
-              deployer.address,
+              "1",
               basicNft.address,
               TOKEN_ID,
+              true,
               ZERO_PRICE,
-              "1",
+              deployer.address,
               DESIREDNFTADDRESS,
               desiredTokenId
             )
@@ -879,11 +920,13 @@ const { developmentChains } = require("../../helper-hardhat-config")
           await expect(nftMarketplace.buyItem(basicNft.address, TOKEN_ID))
             .to.emit(nftMarketplace, "ItemBought")
             .withArgs(
-              otherUser.address,
+              "1",
               basicNft.address,
               TOKEN_ID,
+              false,
               ZERO_PRICE,
-              "1",
+              deployer.address,
+              otherUser.address,
               DESIREDNFTADDRESS,
               desiredTokenId
             )
@@ -906,11 +949,13 @@ const { developmentChains } = require("../../helper-hardhat-config")
           )
             .to.emit(nftMarketplace, "ItemBought")
             .withArgs(
-              otherUser.address,
+              "1",
               basicNft.address,
               TOKEN_ID,
+              false,
               ZERO_PRICE,
-              "1",
+              deployer.address,
+              otherUser.address,
               DESIREDNFTADDRESS,
               desiredTokenId
             )
@@ -1012,7 +1057,7 @@ const { developmentChains } = require("../../helper-hardhat-config")
           ).to.be.revertedWith("NftMarketplace__NotOwner")
         })
 
-        it("reverts if updated price AND desiredNftAddress is zero", async function () {
+        it("allows listing the nft for free", async function () {
           await nftMarketplace.listItem(
             basicNft.address,
             TOKEN_ID,
@@ -1028,7 +1073,18 @@ const { developmentChains } = require("../../helper-hardhat-config")
               ZERO_DESIREDNFTADDRESS,
               new_desiredTokenId
             )
-          ).to.be.revertedWith("NftMarketplace__PriceMustBeAboveZeroOrNoDesiredNftGiven")
+          )
+            .to.emit(nftMarketplace, "ItemUpdated")
+            .withArgs(
+              "1",
+              basicNft.address,
+              TOKEN_ID,
+              true,
+              ZERO_PRICE,
+              deployer.address,
+              ZERO_DESIREDNFTADDRESS,
+              new_desiredTokenId
+            )
         })
 
         it("reverts if not approved", async function () {
@@ -1100,11 +1156,12 @@ const { developmentChains } = require("../../helper-hardhat-config")
           )
             .to.emit(nftMarketplace, "ItemUpdated")
             .withArgs(
-              deployer.address,
+              "1",
               basicNft.address,
               TOKEN_ID,
+              true,
               ZERO_PRICE,
-              "1",
+              deployer.address,
               NEW_DESIREDNFTADDRESS,
               new_desiredTokenId
             )
@@ -1217,11 +1274,12 @@ const { developmentChains } = require("../../helper-hardhat-config")
           )
             .to.emit(nftMarketplace, "ItemListed")
             .withArgs(
-              deployer.address,
+              "1",
               basicNft.address,
               TOKEN_ID,
+              true,
               PRICE,
-              "1",
+              deployer.address,
               DESIREDNFTADDRESS,
               desiredTokenId
             )
@@ -1326,11 +1384,13 @@ const { developmentChains } = require("../../helper-hardhat-config")
           await expect(nftMarketplace.buyItem(basicNft.address, TOKEN_ID, { value: PRICE }))
             .to.emit(nftMarketplace, "ItemBought")
             .withArgs(
-              otherUser.address,
+              "1",
               basicNft.address,
               TOKEN_ID,
+              false,
               PRICE,
-              "1",
+              deployer.address,
+              otherUser.address,
               DESIREDNFTADDRESS,
               desiredTokenId
             )
@@ -1352,11 +1412,13 @@ const { developmentChains } = require("../../helper-hardhat-config")
           )
             .to.emit(nftMarketplace, "ItemBought")
             .withArgs(
-              otherUser.address,
+              "1",
               basicNft.address,
               TOKEN_ID,
+              false,
               PRICE,
-              "1",
+              deployer.address,
+              otherUser.address,
               DESIREDNFTADDRESS,
               desiredTokenId
             )
@@ -1518,7 +1580,7 @@ const { developmentChains } = require("../../helper-hardhat-config")
           ).to.be.revertedWith("NftMarketplace__NotOwner")
         })
 
-        it("reverts if updated price AND desiredNftAddress is zero", async function () {
+        it("allows listing the nft for free", async function () {
           await nftMarketplace.listItem(
             basicNft.address,
             TOKEN_ID,
@@ -1534,7 +1596,18 @@ const { developmentChains } = require("../../helper-hardhat-config")
               ZERO_DESIREDNFTADDRESS,
               new_desiredTokenId
             )
-          ).to.be.revertedWith("NftMarketplace__PriceMustBeAboveZeroOrNoDesiredNftGiven")
+          )
+            .to.emit(nftMarketplace, "ItemUpdated")
+            .withArgs(
+              "1",
+              basicNft.address,
+              TOKEN_ID,
+              true,
+              ZERO_PRICE,
+              deployer.address,
+              ZERO_DESIREDNFTADDRESS,
+              new_desiredTokenId
+            )
         })
 
         it("reverts if not approved", async function () {
@@ -1606,11 +1679,12 @@ const { developmentChains } = require("../../helper-hardhat-config")
           )
             .to.emit(nftMarketplace, "ItemUpdated")
             .withArgs(
-              deployer.address,
+              "1",
               basicNft.address,
               TOKEN_ID,
+              true,
               NEW_PRICE,
-              "1",
+              deployer.address,
               NEW_DESIREDNFTADDRESS,
               new_desiredTokenId
             )
