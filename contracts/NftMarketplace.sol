@@ -21,6 +21,8 @@ contract NftMarketplace is ReentrancyGuard {
         uint256 desiredTokenId; // Desired token IDs for swap !!!W find a way to have multiple desiredNftAddresses ( and / or ) - maybe by using an array here(?)
     } // *** also find a way to have the seller list their nft for swap WITH additional ETH. so that they can say i want my 1ETH worth NFT to be swapped against this specific NFT AND 0.3 ETH.
 
+    // !!!W I need to create tests for the isListed event parameters!
+    // !!!W maybe I should change the isListed to something like status where i have an enum with options listed, updated, canceled, bought, swapped, etc. and then i can have a function that returns all the listings of a specific status. that would be a nice feature for the frontend. But more importantly i can use this for thegraph to feed the frontend this this specific information.
     event ItemListed(
         uint256 indexed listingId,
         address indexed nftAddress,
@@ -31,7 +33,7 @@ contract NftMarketplace is ReentrancyGuard {
         address desiredNftAddress,
         uint256 desiredTokenId
     );
-    // *** should i add the seller to this event?
+    // *** should i add the seller to this event? Yes, did it.
     event ItemBought(
         uint256 indexed listingId,
         address indexed nftAddress,
