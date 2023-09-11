@@ -13,9 +13,8 @@ error NftMarketplace__TransferFailed();
 
 contract NftMarketplace is ReentrancyGuard {
     struct Listing {
-        uint256 s_listingId; // *** I want that every Listing has a uinque Lising Number, just like in the real world :)
+        uint256 listingId; // *** I want that every Listing has a uinque Lising Number, just like in the real world :)
         // !!!W then it would make sense to just always let the functions also work if only the listingId is given in the args, also the errors should only return the listingId and not the nftAddress and tokenId
-        // !!!W I think this should be listingId instead of s_listingId, because the s_listingId is the one in line 73 where it counts up and is saved directly in storage rather than in the struct.
         uint256 price;
         address seller;
         address desiredNftAddress; // Desired NFTs for swap !!!W find a way to have multiple desiredNftAddresses ( and / or ) - maybe by using an array here(?)
@@ -23,7 +22,7 @@ contract NftMarketplace is ReentrancyGuard {
     } // *** also find a way to have the seller list their nft for swap WITH additional ETH. so that they can say i want my 1ETH worth NFT to be swapped against this specific NFT AND 0.3 ETH.
 
     event ItemListed(
-        uint256 indexed s_listingId,
+        uint256 indexed listingId,
         address indexed nftAddress,
         uint256 indexed tokenId,
         bool isListed,
@@ -34,7 +33,7 @@ contract NftMarketplace is ReentrancyGuard {
     );
     // *** should i add the seller to this event?
     event ItemBought(
-        uint256 indexed s_listingId,
+        uint256 indexed listingId,
         address indexed nftAddress,
         uint256 indexed tokenId,
         bool isListed,
@@ -46,7 +45,7 @@ contract NftMarketplace is ReentrancyGuard {
     );
 
     event ItemCanceled(
-        uint256 indexed s_listingId,
+        uint256 indexed listingId,
         address indexed nftAddress,
         uint256 indexed tokenId,
         bool isListed,
@@ -57,7 +56,7 @@ contract NftMarketplace is ReentrancyGuard {
     );
 
     event ItemUpdated(
-        uint256 indexed s_listingId,
+        uint256 indexed listingId,
         address indexed nftAddress,
         uint256 indexed tokenId,
         bool isListed,
@@ -77,7 +76,7 @@ contract NftMarketplace is ReentrancyGuard {
 
     IERC721 nft; // !!!W test if its a problem to have this declared here and not in every function extra, if multiple users use the contracts functions at the same time. I think i actually could just declare this in each function again and again and work with the input arguments and returns to let the data flow
     // !!!W cGPT mentioned: Declaring nft at the contract level can lead to potential issues if multiple functions are called concurrently. It's safer to declare it within each function where it's needed.
-    uint256 s_listingId = 0;
+    uint256 s_listingId = 0; // !!!W should this be in a constructor?
 
     ///////////////
     // Modifiers //
@@ -157,7 +156,7 @@ contract NftMarketplace is ReentrancyGuard {
             desiredTokenId
         );
         emit ItemListed(
-            s_listingId, // !!!W would it be more gas efficient to use listeditems.s_listingId instead of s_listingId? Because this way is reading from the storage and the other way from the memory, right?
+            s_listingId,
             nftAddress,
             tokenId,
             true,
@@ -214,7 +213,7 @@ contract NftMarketplace is ReentrancyGuard {
 
             delete (s_listings[nftAddress][tokenId]);
             emit ItemBought(
-                listedItem.s_listingId,
+                listedItem.listingId,
                 nftAddress,
                 tokenId,
                 false,
@@ -235,7 +234,7 @@ contract NftMarketplace is ReentrancyGuard {
         delete (s_listings[nftAddress][tokenId]);
 
         emit ItemCanceled(
-            listedItem.s_listingId,
+            listedItem.listingId,
             nftAddress,
             tokenId,
             false,
@@ -269,7 +268,7 @@ contract NftMarketplace is ReentrancyGuard {
         listedItem.desiredTokenId = newdesiredTokenId;
         s_listings[nftAddress][tokenId] = listedItem;
         emit ItemUpdated(
-            listedItem.s_listingId, // !!!W test if the listingId stays the same, even if between the listItem creation and the updateListing have been other listings created and deleted
+            listedItem.listingId, // !!!W test if the listingId stays the same, even if between the listItem creation and the updateListing have been other listings created and deleted
             nftAddress,
             tokenId,
             true,
