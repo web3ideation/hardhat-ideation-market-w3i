@@ -178,6 +178,7 @@ contract NftMarketplace is ReentrancyGuard {
         }
     }
 
+    // !!!W The seller of an item shouldnt be able to buy it, make a revert for that
     // !!!W I think there should be a ~10 minute threshold of people being able to buy a newly listed nft, since it might be that the seller made a mistake and wants to use the update function. so put in something like a counter of blocks mined since the listing of that specific nft to be bought. It should be visible in the frontend aswell tho, that this nft is not yet to be bought but in ~10 minutes.
     function buyItem(
         address nftAddress, // !!!W should i rather work with the listingId of the struct? that seems more streamlined...
