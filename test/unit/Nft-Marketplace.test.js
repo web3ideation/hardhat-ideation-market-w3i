@@ -1846,6 +1846,31 @@ const { developmentChains } = require("../../helper-hardhat-config")
           )
         })
       })
+      describe("read out the NFT Name and Symbol through a raw function call", () => {
+        beforeEach(async () => {
+          const regularNftInfo = await deployments.get("RegularNft")
+          regularNftContract = await ethers.getContractAt("RegularNft", regularNftInfo.address)
+          regularNft = regularNftContract.connect(deployer)
+          DESIREDNFTADDRESS = regularNft.address
+          desiredTokenId = 2
+          otherUser = accounts[2]
+          // so the regularNft has a only owner modifier for the mint function, thats why i have to mint it with the deployer and then approve it for the user.
+          await regularNft.mint(user.address)
+          await regularNft.mint(otherUser.address)
+          regularNft = regularNftContract.connect(user)
+          // so the regularNft starts counting there tokenId at 1.
+          await regularNft.approve(nftMarketplaceContract.address, 1)
+          regularNft = regularNftContract.connect(otherUser)
+          await regularNft.approve(nftMarketplaceContract.address, 2)
+          nftMarketplace = nftMarketplaceContract.connect(user)
+        })
+        it("returns the NFT name correctly", async function () {
+          expect(await regularNft.name()).to.equal("w3iDoge #1")
+        })
+        it("returns the NFT symbol correctly", async function () {
+          expect(await regularNft.symbol()).to.equal("WID")
+        })
+      })
 
       // !!!W Recreate a better simulation of a reentrancy attack and test it on the testnet
 
