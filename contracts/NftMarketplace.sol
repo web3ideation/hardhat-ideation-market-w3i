@@ -9,7 +9,7 @@ error NftMarketplace__NotApprovedForMarketplace();
 error NftMarketplace__NotOwner(uint256 tokenId, address nftAddress, address nftOwner); // !!!W all those arguments might be too much unnecessary information. does it safe gas or sth if i leave it out?
 error NftMarketplace__PriceNotMet(address nftAddress, uint256 tokenId, uint256 price);
 error NftMarketplace__NoProceeds();
-error NftMarketplace__TransferFailed();
+error NftMarketplace__TransferFailed(); // !!!W is this even necessary? i think it reverts on its own when it fails, right? If it is necessary maybe add the error message that is given by the transfer function
 
 contract NftMarketplace is ReentrancyGuard {
     struct Listing {
@@ -107,7 +107,7 @@ contract NftMarketplace is ReentrancyGuard {
         nft = IERC721(nftAddress);
         if (msg.sender != nft.ownerOf(tokenId)) {
             revert NftMarketplace__NotOwner(tokenId, nftAddress, nft.ownerOf(tokenId));
-        }
+        } // !!!W make this a require statement instead of an if statement(?)
         _;
     }
 
@@ -146,6 +146,13 @@ contract NftMarketplace is ReentrancyGuard {
         //     "NftMarketplace__PriceMustBeAboveZeroOrNoDesiredNftGiven"
         // );
 
+        // !!!W I need to add a check that the user doesnt try to swap list agains the same nft they are listing. so if the desiredNftAddress and desiredTokenId are the same as the nftAddress and tokenId, it should revert.
+
+        require(
+            !(nftAddress == desiredNftAddress && tokenId == desiredTokenId),
+            "NftMarketplace__NoSwapForSameNft"
+        );
+
         // info: approve the NFT Marketplace to transfer the NFT (that way the Owner is keeping the NFT in their wallet until someone bougt it from the marketplace)
         checkApproval(nftAddress, tokenId);
         s_listingId++;
@@ -175,7 +182,7 @@ contract NftMarketplace is ReentrancyGuard {
         nft = IERC721(nftAddress);
         if (nft.getApproved(tokenId) != address(this)) {
             revert NftMarketplace__NotApprovedForMarketplace();
-        }
+        } // !!!W make this a require statement instead of an if statement(?)
     }
 
     // !!!W The seller of an item shouldnt be able to buy it, make a revert for that
@@ -191,10 +198,11 @@ contract NftMarketplace is ReentrancyGuard {
         if (msg.value < listedItem.price) {
             revert NftMarketplace__PriceNotMet(nftAddress, tokenId, listedItem.price); // !!!W I think it would be good to add msg.value as well so its visible how much eth has actually been tried to transfer, since i guess there are gas costs and stuff...
             // !!!W i could also do this with `require(msg.value == listedItem.price, "Incorrect Ether sent");` - is this better? like safer and or gas efficient?
+            // !!!W make this a require statement instead of an if statement(?)
         } else {
             s_proceeds[listedItem.seller] += msg.value;
             if (listedItem.desiredNftAddress != address(0)) {
-                require( // should i have this as a modifier just like the isOwner one i use for the listItem?
+                require( // !!!W should i have this as a modifier just like the isOwner one i use for the listItem?
                     IERC721(listedItem.desiredNftAddress).ownerOf(listedItem.desiredTokenId) ==
                         msg.sender,
                     "You don't own the desired NFT for swap"
@@ -208,7 +216,7 @@ contract NftMarketplace is ReentrancyGuard {
                     listedItem.desiredTokenId
                 );
                 // !!!W when implementing the swap + eth option, i need to have the s_proceeds here aswell. - i think i do already at the top...
-            }
+            } // !!!W make this a require statement instead of an if statement(?)
             // maybe its safer to not use else but start a new if with `if (!listedItem.isForSwap) {`
 
             IERC721(nftAddress).safeTransferFrom(listedItem.seller, msg.sender, tokenId); // !!!W this needs an revert catch thingy bc if it fails to transfer the nft, for example because the approval has been revoked, the whole function has to be reverted.
@@ -263,6 +271,12 @@ contract NftMarketplace is ReentrancyGuard {
         //     newPrice > 0 || newDesiredNftAddress != address(0),
         //     "NftMarketplace__PriceMustBeAboveZeroOrNoDesiredNftGiven"
         // );
+
+        require(
+            !(nftAddress == newDesiredNftAddress && tokenId == newdesiredTokenId),
+            "NftMarketplace__NoSwapForSameNft"
+        );
+
         checkApproval(nftAddress, tokenId); // *** patrick didnt check if the approval is still given in his contract
         Listing memory listedItem = s_listings[nftAddress][tokenId];
         listedItem.price = newPrice;
@@ -286,7 +300,7 @@ contract NftMarketplace is ReentrancyGuard {
         uint256 proceeds = s_proceeds[msg.sender];
         if (proceeds <= 0) {
             revert NftMarketplace__NoProceeds();
-        }
+        } // !!!W make this a require statement instead of an if statement(?)
         s_proceeds[msg.sender] = 0;
         payable(msg.sender).transfer(proceeds); // *** I'm using this instead of Patricks (bool success, ) = payable(msg.sender).call{value: proceeds}(""); require(success, "NftMarketplace__TransferFailed");`bc mine reverts on its own when it doesnt succeed, and therby I consider it better!
         // should this function also emit an event? just for being able to track when somebody withdrew?

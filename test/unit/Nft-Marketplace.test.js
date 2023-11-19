@@ -842,6 +842,18 @@ const { developmentChains } = require("../../helper-hardhat-config")
           )
           expect(await nftMarketplace.getNextListingId()).to.equal("1")
         })
+
+        it("reverts if same NFT", async function () {
+          await expect(
+            nftMarketplace.listItem(
+              basicNft.address,
+              TOKEN_ID,
+              ZERO_PRICE,
+              basicNft.address,
+              TOKEN_ID
+            )
+          ).to.be.revertedWith("NftMarketplace__NoSwapForSameNft")
+        })
       })
 
       describe("BuyItem for Nft", () => {
@@ -1018,11 +1030,16 @@ const { developmentChains } = require("../../helper-hardhat-config")
           WOWMock = WOWMockContract.connect(otherUser)
 
           await WOWMock.mint(1, { value: ethers.utils.parseEther("0.000001") })
-          await WOWMock.approve(nftMarketplaceContract.address, TOKEN_ID)
+          await WOWMock.approve(nftMarketplaceContract.address, 0)
+          await WOWMock.mint(1, { value: ethers.utils.parseEther("0.000001") })
+          await WOWMock.approve(nftMarketplaceContract.address, 1)
+          await WOWMock.mint(1, { value: ethers.utils.parseEther("0.000001") })
+          await WOWMock.approve(nftMarketplaceContract.address, 2)
 
           WOWMock = WOWMockContract.connect(deployer)
           NEW_DESIREDNFTADDRESS = WOWMock.address
-          new_desiredTokenId = "0"
+          desiredTokenId = "1"
+          new_desiredTokenId = "2"
           DESIREDNFTADDRESS = basicNft.address
         })
         it("reverts if not listed", async function () {
@@ -1038,6 +1055,7 @@ const { developmentChains } = require("../../helper-hardhat-config")
         })
 
         it("reverts if not Owner", async function () {
+          console.log("desiredTokenId", desiredTokenId)
           await nftMarketplace.listItem(
             basicNft.address,
             TOKEN_ID,
@@ -1166,6 +1184,25 @@ const { developmentChains } = require("../../helper-hardhat-config")
               new_desiredTokenId
             )
         })
+
+        it("reverts if same NFT", async function () {
+          await nftMarketplace.listItem(
+            basicNft.address,
+            TOKEN_ID,
+            ZERO_PRICE,
+            DESIREDNFTADDRESS,
+            desiredTokenId
+          )
+          await expect(
+            nftMarketplace.updateListing(
+              basicNft.address,
+              TOKEN_ID,
+              ZERO_PRICE,
+              basicNft.address,
+              TOKEN_ID
+            )
+          ).to.be.revertedWith("NftMarketplace__NoSwapForSameNft")
+        })
       })
 
       describe("listItem for Eth AND NFT", () => {
@@ -1176,6 +1213,7 @@ const { developmentChains } = require("../../helper-hardhat-config")
           await basicNft.approve(nftMarketplaceContract.address, NEXTTOKEN_ID)
           basicNft = basicNftContract.connect(deployer)
           DESIREDNFTADDRESS = basicNft.address
+          desiredTokenId = 1
         })
 
         it("reverts if already listed from same user", async function () {
@@ -1294,6 +1332,12 @@ const { developmentChains } = require("../../helper-hardhat-config")
             desiredTokenId
           )
           expect(await nftMarketplace.getNextListingId()).to.equal("1")
+        })
+
+        it("reverts if same NFT", async function () {
+          await expect(
+            nftMarketplace.listItem(basicNft.address, TOKEN_ID, PRICE, basicNft.address, TOKEN_ID)
+          ).to.be.revertedWith("NftMarketplace__NoSwapForSameNft")
         })
       })
 
@@ -1688,6 +1732,24 @@ const { developmentChains } = require("../../helper-hardhat-config")
               NEW_DESIREDNFTADDRESS,
               new_desiredTokenId
             )
+        })
+        it("reverts if same NFT", async function () {
+          await nftMarketplace.listItem(
+            basicNft.address,
+            TOKEN_ID,
+            PRICE,
+            DESIREDNFTADDRESS,
+            desiredTokenId
+          )
+          await expect(
+            nftMarketplace.updateListing(
+              basicNft.address,
+              TOKEN_ID,
+              PRICE,
+              basicNft.address,
+              TOKEN_ID
+            )
+          ).to.be.revertedWith("NftMarketplace__NoSwapForSameNft")
         })
       })
 
