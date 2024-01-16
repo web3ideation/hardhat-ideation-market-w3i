@@ -5,13 +5,13 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "hardhat/console.sol";
 
-error NftMarketplace__NotApprovedForMarketplace();
-error NftMarketplace__NotOwner(uint256 tokenId, address nftAddress, address nftOwner); // !!!W all those arguments might be too much unnecessary information. does it safe gas or sth if i leave it out?
-error NftMarketplace__PriceNotMet(address nftAddress, uint256 tokenId, uint256 price);
-error NftMarketplace__NoProceeds();
-error NftMarketplace__TransferFailed(); // !!!W is this even necessary? i think it reverts on its own when it fails, right? If it is necessary maybe add the error message that is given by the transfer function
+error IdeationMarket__NotApprovedForMarketplace();
+error IdeationMarket__NotOwner(uint256 tokenId, address nftAddress, address nftOwner); // !!!W all those arguments might be too much unnecessary information. does it safe gas or sth if i leave it out?
+error IdeationMarket__PriceNotMet(address nftAddress, uint256 tokenId, uint256 price);
+error IdeationMarket__NoProceeds();
+error IdeationMarket__TransferFailed(); // !!!W is this even necessary? i think it reverts on its own when it fails, right? If it is necessary maybe add the error message that is given by the transfer function
 
-contract NftMarketplace is ReentrancyGuard {
+contract IdeationMarket is ReentrancyGuard {
     struct Listing {
         uint256 listingId; // *** I want that every Listing has a uinque Lising Number, just like in the real world :)
         // !!!W then it would make sense to just always let the functions also work if only the listingId is given in the args, also the errors should only return the listingId and not the nftAddress and tokenId
@@ -88,13 +88,13 @@ contract NftMarketplace is ReentrancyGuard {
     modifier notListed(address nftAddress, uint256 tokenId) {
         require(
             s_listings[nftAddress][tokenId].seller == address(0),
-            "NftMarketplace__AlreadyListed"
+            "IdeationMarket__AlreadyListed"
         );
         _;
     }
 
     modifier isListed(address nftAddress, uint256 tokenId) {
-        require(s_listings[nftAddress][tokenId].seller != address(0), "NftMarketplace__NotListed");
+        require(s_listings[nftAddress][tokenId].seller != address(0), "IdeationMarket__NotListed");
         _;
     }
 
@@ -106,7 +106,7 @@ contract NftMarketplace is ReentrancyGuard {
     ) {
         nft = IERC721(nftAddress);
         if (msg.sender != nft.ownerOf(tokenId)) {
-            revert NftMarketplace__NotOwner(tokenId, nftAddress, nft.ownerOf(tokenId));
+            revert IdeationMarket__NotOwner(tokenId, nftAddress, nft.ownerOf(tokenId));
         } // !!!W make this a require statement instead of an if statement(?)
         _;
     }
@@ -143,14 +143,14 @@ contract NftMarketplace is ReentrancyGuard {
         // !!!W since the already listed / not listed modifiers dont use the price anymore but the seller, i dont need to check if the price is above 0 anymore. -> delte this check
         // require(
         //     price > 0 || desiredNftAddress != address(0),
-        //     "NftMarketplace__PriceMustBeAboveZeroOrNoDesiredNftGiven"
+        //     "IdeationMarket__PriceMustBeAboveZeroOrNoDesiredNftGiven"
         // );
 
         // !!!W I need to add a check that the user doesnt try to swap list agains the same nft they are listing. so if the desiredNftAddress and desiredTokenId are the same as the nftAddress and tokenId, it should revert.
 
         require(
             !(nftAddress == desiredNftAddress && tokenId == desiredTokenId),
-            "NftMarketplace__NoSwapForSameNft"
+            "IdeationMarket__NoSwapForSameNft"
         );
 
         // info: approve the NFT Marketplace to transfer the NFT (that way the Owner is keeping the NFT in their wallet until someone bougt it from the marketplace)
@@ -181,7 +181,7 @@ contract NftMarketplace is ReentrancyGuard {
         // !!!W would it make sense to have this being a modifier?
         nft = IERC721(nftAddress);
         if (nft.getApproved(tokenId) != address(this)) {
-            revert NftMarketplace__NotApprovedForMarketplace();
+            revert IdeationMarket__NotApprovedForMarketplace();
         } // !!!W make this a require statement instead of an if statement(?)
     }
 
@@ -192,11 +192,11 @@ contract NftMarketplace is ReentrancyGuard {
         uint256 tokenId
     ) external payable nonReentrant isListed(nftAddress, tokenId) {
         // !!!W if two users call the function concurrently the second user will be blocked. what happens then? is there a way to not even have the user notice that and just try again?
-        // checkApproval(nftAddress, tokenId); // !!!W I want to check if the nftmarketplace still has the rights to transfer the nft when it is about to be bought. but i probably have to change this function sincec this time its the buyer calling it, not the seller so it needs to get the sellers addres via the listingStruct// !!!W add a test that confirms that the buyItem function fails if the approval has been revoked in the meantime!
+        // checkApproval(nftAddress, tokenId); // !!!W I want to check if the ideationMarket still has the rights to transfer the nft when it is about to be bought. but i probably have to change this function sincec this time its the buyer calling it, not the seller so it needs to get the sellers addres via the listingStruct// !!!W add a test that confirms that the buyItem function fails if the approval has been revoked in the meantime!
         Listing memory listedItem = s_listings[nftAddress][tokenId];
 
         if (msg.value < listedItem.price) {
-            revert NftMarketplace__PriceNotMet(nftAddress, tokenId, listedItem.price); // !!!W I think it would be good to add msg.value as well so its visible how much eth has actually been tried to transfer, since i guess there are gas costs and stuff...
+            revert IdeationMarket__PriceNotMet(nftAddress, tokenId, listedItem.price); // !!!W I think it would be good to add msg.value as well so its visible how much eth has actually been tried to transfer, since i guess there are gas costs and stuff...
             // !!!W i could also do this with `require(msg.value == listedItem.price, "Incorrect Ether sent");` - is this better? like safer and or gas efficient?
             // !!!W make this a require statement instead of an if statement(?)
         } else {
@@ -269,12 +269,12 @@ contract NftMarketplace is ReentrancyGuard {
         // !!!W since the already listed / not listed modifiers dont use the price anymore but the seller, i dont need to check if the price is above 0 anymore. -> delte this check
         // require(
         //     newPrice > 0 || newDesiredNftAddress != address(0),
-        //     "NftMarketplace__PriceMustBeAboveZeroOrNoDesiredNftGiven"
+        //     "IdeationMarket__PriceMustBeAboveZeroOrNoDesiredNftGiven"
         // );
 
         require(
             !(nftAddress == newDesiredNftAddress && tokenId == newdesiredTokenId),
-            "NftMarketplace__NoSwapForSameNft"
+            "IdeationMarket__NoSwapForSameNft"
         );
 
         checkApproval(nftAddress, tokenId); // *** patrick didnt check if the approval is still given in his contract
@@ -299,10 +299,10 @@ contract NftMarketplace is ReentrancyGuard {
     function withdrawProceeds() external payable nonReentrant {
         uint256 proceeds = s_proceeds[msg.sender];
         if (proceeds <= 0) {
-            revert NftMarketplace__NoProceeds();
+            revert IdeationMarket__NoProceeds();
         } // !!!W make this a require statement instead of an if statement(?)
         s_proceeds[msg.sender] = 0;
-        payable(msg.sender).transfer(proceeds); // *** I'm using this instead of Patricks (bool success, ) = payable(msg.sender).call{value: proceeds}(""); require(success, "NftMarketplace__TransferFailed");`bc mine reverts on its own when it doesnt succeed, and therby I consider it better!
+        payable(msg.sender).transfer(proceeds); // *** I'm using this instead of Patricks (bool success, ) = payable(msg.sender).call{value: proceeds}(""); require(success, "IdeationMarket__TransferFailed");`bc mine reverts on its own when it doesnt succeed, and therby I consider it better!
         // should this function also emit an event? just for being able to track when somebody withdrew?
     }
 

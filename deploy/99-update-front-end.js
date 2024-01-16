@@ -15,11 +15,11 @@ module.exports = async () => {
 }
 
 async function updateAbi() {
-  const nftMarketplace = await ethers.getContract("NftMarketplace")
+  const ideationMarket = await ethers.getContract("IdeationMarket")
 
   fs.writeFileSync(
-    `${frontEndAbiLocation}NftMarketplace.json`,
-    nftMarketplace.interface.format(ethers.utils.FormatTypes.json)
+    `${frontEndAbiLocation}IdeationMarket.json`,
+    ideationMarket.interface.format(ethers.utils.FormatTypes.json)
   )
   // const basicNft = await ethers.getContract("BasicNft")
 
@@ -31,15 +31,15 @@ async function updateAbi() {
 
 async function updateContractAddresses() {
   const chainId = network.config.chainId.toString()
-  const nftMarketplace = await ethers.getContract("NftMarketplace")
+  const ideationMarket = await ethers.getContract("IdeationMarket")
 
   const contractAddresses = JSON.parse(fs.readFileSync(frontEndContractsFile, "utf8"))
   if (chainId in contractAddresses) {
-    if (!contractAddresses[chainId]["NftMarketplace"].includes(nftMarketplace.address)) {
-      contractAddresses[chainId]["NftMarketplace"].push(nftMarketplace.address)
+    if (!contractAddresses[chainId]["IdeationMarket"].includes(ideationMarket.address)) {
+      contractAddresses[chainId]["IdeationMarket"].push(ideationMarket.address)
     }
   } else {
-    contractAddresses[chainId] = { NftMarketplace: [nftMarketplace.address] }
+    contractAddresses[chainId] = { IdeationMarket: [ideationMarket.address] }
   }
   fs.writeFileSync(frontEndContractsFile, JSON.stringify(contractAddresses))
 }

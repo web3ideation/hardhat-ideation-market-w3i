@@ -243,7 +243,7 @@ New NftMarketplace.sol version 12.09.2023
 deploying "NftMarketplace" (tx: 0x12aaf6703c3aa1411a363dedd5b17c1cb154288e443702f35ecd1ce7df16f8cd)...: deployed at 0x6B6825FbDA1dF2C890086E6E1F31f5D573788224 with 2053807 gas
 
 
---> rename to web3market
+--> rename to web3market 
 --> Add the 0.1% fee thing
 --> discuss with cGPT if the buy function should always just send the fee to a multisig wallet or leave it in the web3market.sol to safe on gas when using a withdrawal function
 --> discuss with cGPT how to implement a withdrawfunction, should it be multisig?

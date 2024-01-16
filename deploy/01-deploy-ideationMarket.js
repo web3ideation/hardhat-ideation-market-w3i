@@ -8,7 +8,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
 
   log("----------------------------------------------------")
   const arguments = []
-  const nftMarketplace = await deploy("NftMarketplace", {
+  const ideationMarket = await deploy("IdeationMarket", {
     from: deployer,
     args: arguments,
     log: true,
@@ -18,17 +18,17 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
   // Verify the deployment
   if (!developmentChains.includes(network.name) && process.env.ETHERSCAN_API_KEY) {
     log("Verifying...")
-    await verify(nftMarketplace.address, arguments)
+    await verify(ideationMarket.address, arguments)
   }
   log("----------------------------------------------------")
 }
 
-module.exports.tags = ["all", "nftMarketplace", "main"]
+module.exports.tags = ["all", "ideationMarket", "main"]
 
 // !!!W test if i can use the hh console to get the NextListingId:
 
 // cGPT
-// Based on the error message you received, it seems like you have not defined the nftMarketplace variable in the console. To interact with your smart contract in the console, you first need to create an instance of the contract using its ABI and address. Here's how you can do it:
+// Based on the error message you received, it seems like you have not defined the ideationMarket variable in the console. To interact with your smart contract in the console, you first need to create an instance of the contract using its ABI and address. Here's how you can do it:
 
 // First, you need to retrieve the ABI and address of your deployed smart contract. You can do this by running the following command in the terminal:
 
@@ -37,7 +37,7 @@ module.exports.tags = ["all", "nftMarketplace", "main"]
 // hh deployments --network <network_name>
 // Replace <network_name> with the name of the network you deployed your contract to, such as localhost or rinkeby.
 
-// This command should output a list of deployed contracts on the specified network. Find the NftMarketplace contract in the list and copy its address and abi properties.
+// This command should output a list of deployed contracts on the specified network. Find the ideationMarket contract in the list and copy its address and abi properties.
 
 // In the console, you can use the ethers library to create an instance of your contract. Install the library by running the following command in the terminal:
 
@@ -65,8 +65,8 @@ module.exports.tags = ["all", "nftMarketplace", "main"]
 
 // accounts = ethers.getSigners()
 // deployer = accounts[0]
-// await deployments.fixture(["NftMarketplace"])
-// nftMarketplace = await ethers.getContract("NftMarketplace")
+// await deployments.fixture(["ideationMarket"])
+// ideationMarket = await ethers.getContract("IdeationMarket")
 
 // You can check the Windows Firewall settings on Windows 10 by following these steps:
 
@@ -101,4 +101,4 @@ module.exports.tags = ["all", "nftMarketplace", "main"]
 // {}
 // >
 
-// I think thats übertrieben. hh console and then const nftMarketplace = await ethers.getContractFactory("NftMarketplace") is probably enough. But it still tells me that Uncaught TypeError: nftMarketplace.getNextListingId is not a function... try using the test scripts and then see if i find the error there. if the testscripts work I need to dig into how to use the console, again.
+// I think thats übertrieben. hh console and then const ideationMarket = await ethers.getContractFactory("IdeationMarket") is probably enough. But it still tells me that Uncaught TypeError: ideationMarket.getNextListingId is not a function... try using the test scripts and then see if i find the error there. if the testscripts work I need to dig into how to use the console, again.

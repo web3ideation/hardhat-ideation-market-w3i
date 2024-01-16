@@ -3,20 +3,20 @@ const { network, deployments, ethers } = require("hardhat")
 // const PRICE = ethers.utils.parseEther("0.1")
 
 async function WOWMint() {
-  //   let nftMarketplace, nftMarketplaceContract, basicNft, basicNftContract
+  //   let ideationMarket, ideationMarketContract, basicNft, basicNftContract
   //   const PRICE = ethers.utils.parseEther("0.1")
   //   const NEW_PRICE = ethers.utils.parseEther("0.05")
   //   const TOKEN_ID = 0
   //   accounts = await ethers.getSigners()
   //   deployer = accounts[0]
   //   user = accounts[1]
-  //   await deployments.fixture(["nftMarketplace", "basicNft"])
-  //   const nftMarketplaceInfo = await deployments.get("NftMarketplace")
+  //   await deployments.fixture(["ideationMarket", "basicNft"])
+  //   const ideationMarketInfo = await deployments.get("IdeationMarket")
 
-  // const nftMarketplaceInfo = await deployments.get("NftMarketplace")
-  // const nftMarketplace = await ethers.getContractAt("NftMarketplace", nftMarketplaceInfo.address)
+  // const ideationMarketInfo = await deployments.get("IdeationMarket")
+  // const ideationMarket = await ethers.getContractAt("IdeationMarket", ideationMarketInfo.address)
 
-  //   nftMarketplace = nftMarketplaceContract.connect(deployer)
+  //   ideationMarket = ideationMarketContract.connect(deployer)
   //   const basicNftInfo = await deployments.get("BasicNft")
 
   const wowInfo = await deployments.get("WorldOfWomenMock")
@@ -31,16 +31,16 @@ async function WOWMint() {
   console.log("tokenId from events: " + tokenId)
 
   // console.log("Approving NFT")
-  // const approvalTx = await basicNft.approve(nftMarketplace.address, tokenId)
+  // const approvalTx = await basicNft.approve(ideationMarket.address, tokenId)
   // await approvalTx.wait(1)
 
   // console.log("Listing NFT")
-  // const listTx = await nftMarketplace.listItem(basicNft.address, tokenId, PRICE)
+  // const listTx = await ideationMarket.listItem(basicNft.address, tokenId, PRICE)
   // await listTx.wait(1)
 
   // console.log("NFT minted, approved and listed.")
 
-  //   await nftMarketplace.getListing(basicNftContract.address, TOKEN_ID)
+  //   await ideationMarket.getListing(basicNftContract.address, TOKEN_ID)
 }
 
 WOWMint()

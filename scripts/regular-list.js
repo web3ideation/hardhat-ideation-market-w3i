@@ -4,20 +4,20 @@ const readlineSync = require("readline-sync")
 const PRICE = ethers.utils.parseEther("0.0420")
 
 async function regularList() {
-  //   let nftMarketplace, nftMarketplaceContract, basicNft, basicNftContract
+  //   let ideationMarket, ideationMarketContract, basicNft, basicNftContract
   //   const PRICE = ethers.utils.parseEther("0.1")
   //   const NEW_PRICE = ethers.utils.parseEther("0.05")
   //   const TOKEN_ID = 0
   //   accounts = await ethers.getSigners()
   //   deployer = accounts[0]
   //   user = accounts[1]
-  //   await deployments.fixture(["nftMarketplace", "basicNft"])
-  //   const nftMarketplaceInfo = await deployments.get("NftMarketplace")
+  //   await deployments.fixture(["ideationMarket", "basicNft"])
+  //   const ideationMarketInfo = await deployments.get("IdeationMarket")
 
-  const nftMarketplaceInfo = await deployments.get("NftMarketplace")
-  const nftMarketplace = await ethers.getContractAt("NftMarketplace", nftMarketplaceInfo.address)
+  const ideationMarketInfo = await deployments.get("IdeationMarket")
+  const ideationMarket = await ethers.getContractAt("IdeationMarket", ideationMarketInfo.address)
 
-  //   nftMarketplace = nftMarketplaceContract.connect(deployer)
+  //   ideationMarket = ideationMarketContract.connect(deployer)
   //   const basicNftInfo = await deployments.get("BasicNft")
 
   const regularNftInfo = await deployments.get("RegularNft")
@@ -36,11 +36,11 @@ async function regularList() {
   // Rest of your code that uses tokenId goes here
 
   console.log("Approving NFT")
-  const approvalTx = await regularNft.approve(nftMarketplace.address, tokenId)
+  const approvalTx = await regularNft.approve(ideationMarket.address, tokenId)
   await approvalTx.wait(1)
 
   console.log("Listing NFT")
-  const listTx = await nftMarketplace.listItem(
+  const listTx = await ideationMarket.listItem(
     regularNft.address,
     tokenId,
     PRICE,
@@ -51,7 +51,7 @@ async function regularList() {
 
   console.log(`regularNft #${tokenId} approved and listed.`)
 
-  //   await nftMarketplace.getListing(basicNftContract.address, TOKEN_ID)
+  //   await ideationMarket.getListing(basicNftContract.address, TOKEN_ID)
 }
 
 regularList()
