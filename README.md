@@ -237,3 +237,15 @@ so the basicNft has the .mintNft function, while a erc721 has the .mint function
 the wow also has the .mint function but also needs a number as a parameter which it uses for the tokenid
 the regularNft had the modifier onlyowner for the mint function, which makes sense if the minting is free.
 also the regularNft starts counting there tokenId at 1.
+
+
+New NftMarketplace.sol version 12.09.2023
+deploying "NftMarketplace" (tx: 0x12aaf6703c3aa1411a363dedd5b17c1cb154288e443702f35ecd1ce7df16f8cd)...: deployed at 0x6B6825FbDA1dF2C890086E6E1F31f5D573788224 with 2053807 gas
+
+
+--> rename to web3market
+--> Add the 0.1% fee thing
+--> discuss with cGPT if the buy function should always just send the fee to a multisig wallet or leave it in the web3market.sol to safe on gas when using a withdrawal function
+--> discuss with cGPT how to implement a withdrawfunction, should it be multisig?
+--> if yes: discuss with cGPT how to setup such a multisig withdrawal function to be safe.
+--> discuss with cGPT should the withdrawal function be in the upgradable part or the governance part if i have an upgradable contract?
