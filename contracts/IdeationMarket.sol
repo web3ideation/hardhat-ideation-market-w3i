@@ -3,7 +3,7 @@ pragma solidity ^0.8.7;
 
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "hardhat/console.sol";
+import "hardhat/console.sol"; // W!!! this is for debugging, right? so delete it before going mainnet
 
 error IdeationMarket__NotApprovedForMarketplace();
 error IdeationMarket__NotOwner(uint256 tokenId, address nftAddress, address nftOwner); // !!!W all those arguments might be too much unnecessary information. does it safe gas or sth if i leave it out?
@@ -77,7 +77,17 @@ contract IdeationMarket is ReentrancyGuard {
 
     IERC721 nft; // !!!W test if its a problem to have this declared here and not in every function extra, if multiple users use the contracts functions at the same time. I think i actually could just declare this in each function again and again and work with the input arguments and returns to let the data flow
     // !!!W cGPT mentioned: Declaring nft at the contract level can lead to potential issues if multiple functions are called concurrently. It's safer to declare it within each function where it's needed.
-    uint256 s_listingId = 0; // !!!W should this be in a constructor?
+    uint256 s_listingId;
+    uint256 public ideationMarketFee; // !!!W this should also be adaptable -> variable to be set by contract owner // !!!W when the price is free there is no income for us. check if that might be something someone would use to attack us // W!!! add a function to read out this value - is that even necessary since it is plublic? // W!!! add to the proceeds mapping the contract owner so there would be logged how much fee there is to be deducted, and with this the owner should be able to withdraw the fees - i guess i need to initilize the contract owner through the constructor then // !!!W add a way to send all eth that are in this contract to the companys wallet (or is that already there just by being the owner of the cotnract?)
+
+    /////////////////
+    // Constructor //
+    /////////////////
+
+    constructor(uint256 fee, uint256 lastListingId) {
+        ideationMarketFee = fee; // 1000 is 1%
+        s_listingId = lastListingId; // when upgrading this needs to be the same as the latest listing. When deploying as a new Marketplace it needs to be 0
+    }
 
     ///////////////
     // Modifiers //
@@ -200,7 +210,9 @@ contract IdeationMarket is ReentrancyGuard {
             // !!!W i could also do this with `require(msg.value == listedItem.price, "Incorrect Ether sent");` - is this better? like safer and or gas efficient?
             // !!!W make this a require statement instead of an if statement(?)
         } else {
-            s_proceeds[listedItem.seller] += msg.value;
+            uint256 newProceeds = listedItem.price -
+                ((listedItem.price * ideationMarketFee) / 100000);
+            s_proceeds[listedItem.seller] += newProceeds;
             if (listedItem.desiredNftAddress != address(0)) {
                 require( // !!!W should i have this as a modifier just like the isOwner one i use for the listItem?
                     IERC721(listedItem.desiredNftAddress).ownerOf(listedItem.desiredTokenId) ==
@@ -219,9 +231,10 @@ contract IdeationMarket is ReentrancyGuard {
             } // !!!W make this a require statement instead of an if statement(?)
             // maybe its safer to not use else but start a new if with `if (!listedItem.isForSwap) {`
 
+            delete (s_listings[nftAddress][tokenId]); // W!!! cGPT said bv of reentrancy attacks i need to move this here instead of after the nft transfer. check if it still works. check if i should also consider that before transfering the swap NFT. // !!!W Ask cGPT again what else i need to do to be fully reentrancy attack proof
+
             IERC721(nftAddress).safeTransferFrom(listedItem.seller, msg.sender, tokenId); // !!!W this needs an revert catch thingy bc if it fails to transfer the nft, for example because the approval has been revoked, the whole function has to be reverted.
 
-            delete (s_listings[nftAddress][tokenId]);
             emit ItemBought(
                 listedItem.listingId,
                 nftAddress,

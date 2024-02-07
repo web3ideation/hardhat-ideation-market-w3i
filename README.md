@@ -243,8 +243,10 @@ New NftMarketplace.sol version 12.09.2023
 deploying "NftMarketplace" (tx: 0x12aaf6703c3aa1411a363dedd5b17c1cb154288e443702f35ecd1ce7df16f8cd)...: deployed at 0x6B6825FbDA1dF2C890086E6E1F31f5D573788224 with 2053807 gas
 
 
---> rename to web3market 
---> Add the 0.1% fee thing
+✅ rename to web3market ➡️ when deploying tell niclas about the renaming from nftMarkeptlace/NftMarketplace/hardhat-nft-marketplace-w3i, that he also should rename his repo and code
+--> Add the 0.1% fee thing --> continue with these comments
+// !!!W this should also be adaptable -> variable to be set by contract owner // !!!W when the price is free there is no income for us. check if that might be something someone would use to attack us // W!!! add a function to read out this value - is that even necessary since it is plublic? // W!!! add to the proceeds mapping the contract owner so there would be logged how much fee there is to be deducted, and with this the owner should be able to withdraw the fees - i guess i need to initilize the contract owner through the constructor then // !!!W add a way to send all eth that are in this contract to the companys wallet (or is that already there just by being the owner of the cotnract?)
+--> discuss with cGPT using a diamond setup to have the governance and upgradability aswell as the withdrawal of the fee managed and if open zepplin has a boilerplate
 --> discuss with cGPT if the buy function should always just send the fee to a multisig wallet or leave it in the web3market.sol to safe on gas when using a withdrawal function
 --> discuss with cGPT how to implement a withdrawfunction, should it be multisig?
 --> if yes: discuss with cGPT how to setup such a multisig withdrawal function to be safe.
