@@ -75,16 +75,18 @@ contract IdeationMarket is ReentrancyGuard {
     // seller address -> amount earned
     mapping(address => uint256) private s_proceeds;
 
+    address private owner; // !!!W If the diamond contract doesnt take care of that: Make sure to be give the possibility to transfer ownership
     IERC721 nft; // !!!W test if its a problem to have this declared here and not in every function extra, if multiple users use the contracts functions at the same time. I think i actually could just declare this in each function again and again and work with the input arguments and returns to let the data flow
     // !!!W cGPT mentioned: Declaring nft at the contract level can lead to potential issues if multiple functions are called concurrently. It's safer to declare it within each function where it's needed.
     uint256 s_listingId;
-    uint256 public ideationMarketFee; // !!!W this should also be adaptable -> variable to be set by contract owner // !!!W when the price is free there is no income for us. check if that might be something someone would use to attack us // W!!! add a function to read out this value - is that even necessary since it is plublic? // W!!! add to the proceeds mapping the contract owner so there would be logged how much fee there is to be deducted, and with this the owner should be able to withdraw the fees - i guess i need to initilize the contract owner through the constructor then // !!!W add a way to send all eth that are in this contract to the companys wallet (or is that already there just by being the owner of the cotnract?)
+    uint256 public ideationMarketFee; // ***W this should also be adaptable -> variable to be set by contract owner // W*** add to the proceeds mapping the contract owner so there would be logged how much fee there is to be deducted, and with this the owner should be able to withdraw the fees - i guess i need to initilize the contract owner through the constructor then // !!!W add a way to send all eth that are in this contract to the companys wallet (or is that already there just by being the owner of the cotnract?) // !!!W when a listing is set the fee should stick to it, meaning that if the fee changes in the meantime, that listing still has the old fee. Do that by adding fee to the listing and using that for the proceeds.
 
     /////////////////
     // Constructor //
     /////////////////
 
     constructor(uint256 fee, uint256 lastListingId) {
+        owner = msg.sender;
         ideationMarketFee = fee; // 1000 is 1%
         s_listingId = lastListingId; // when upgrading this needs to be the same as the latest listing. When deploying as a new Marketplace it needs to be 0
     }
@@ -94,6 +96,11 @@ contract IdeationMarket is ReentrancyGuard {
     ///////////////
 
     // nonReentrant Modifier is inherited
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Caller is not the owner");
+        _;
+    }
 
     modifier notListed(address nftAddress, uint256 tokenId) {
         require(
@@ -112,7 +119,7 @@ contract IdeationMarket is ReentrancyGuard {
     modifier isOwner(
         address nftAddress,
         uint256 tokenId,
-        address owner
+        address owner // !!!W rename this to nftOwner - bc it uses the same name as the contractowner variable
     ) {
         nft = IERC721(nftAddress);
         if (msg.sender != nft.ownerOf(tokenId)) {
@@ -210,9 +217,10 @@ contract IdeationMarket is ReentrancyGuard {
             // !!!W i could also do this with `require(msg.value == listedItem.price, "Incorrect Ether sent");` - is this better? like safer and or gas efficient?
             // !!!W make this a require statement instead of an if statement(?)
         } else {
-            uint256 newProceeds = listedItem.price -
-                ((listedItem.price * ideationMarketFee) / 100000);
+            uint256 fee = ((listedItem.price * ideationMarketFee) / 100000);
+            uint256 newProceeds = listedItem.price - fee;
             s_proceeds[listedItem.seller] += newProceeds;
+            s_proceeds[owner] += fee; // !!!W check if this  is the correct way of logging/collecting the marketplace fee (including the calculation of the variable 'fee')
             if (listedItem.desiredNftAddress != address(0)) {
                 require( // !!!W should i have this as a modifier just like the isOwner one i use for the listItem?
                     IERC721(listedItem.desiredNftAddress).ownerOf(listedItem.desiredTokenId) ==
@@ -227,6 +235,7 @@ contract IdeationMarket is ReentrancyGuard {
                     listedItem.seller,
                     listedItem.desiredTokenId
                 );
+                // !!!W In case the swapped nft had been actively listed at the time, that listing has to get canceled
                 // !!!W when implementing the swap + eth option, i need to have the s_proceeds here aswell. - i think i do already at the top...
             } // !!!W make this a require statement instead of an if statement(?)
             // maybe its safer to not use else but start a new if with `if (!listedItem.isForSwap) {`
@@ -317,6 +326,10 @@ contract IdeationMarket is ReentrancyGuard {
         s_proceeds[msg.sender] = 0;
         payable(msg.sender).transfer(proceeds); // *** I'm using this instead of Patricks (bool success, ) = payable(msg.sender).call{value: proceeds}(""); require(success, "IdeationMarket__TransferFailed");`bc mine reverts on its own when it doesnt succeed, and therby I consider it better!
         // should this function also emit an event? just for being able to track when somebody withdrew?
+    }
+
+    function setFee(uint256 fee) external onlyOwner {
+        ideationMarketFee = fee;
     }
 
     //////////////////////
